@@ -10,6 +10,11 @@ import {
   ProductResponse
 } from '../models/product';
 
+import {
+  SaleCreate,
+  SaleResponse
+} from '../models/sale';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -18,6 +23,7 @@ export class ApiService {
   private readonly http = inject(HttpClient);
 
   private readonly baseUrl = 'http://127.0.0.1:8000';
+
 
   // ============================================
   // GET PRODUCTS
@@ -31,6 +37,7 @@ export class ApiService {
       `${this.baseUrl}/products/${ownerId}`
     );
   }
+
 
   // ============================================
   // CREATE PRODUCT
@@ -46,6 +53,7 @@ export class ApiService {
     );
   }
 
+
   // ============================================
   // UPDATE PRODUCT
   // ============================================
@@ -60,6 +68,7 @@ export class ApiService {
       product
     );
   }
+
 
   // ============================================
   // DELETE PRODUCT
@@ -83,4 +92,20 @@ export class ApiService {
       `${this.baseUrl}/products/${productId}`
     );
   }
+
+
+  // ============================================
+  // CREATE SALE
+  // ============================================
+
+  createSale(
+    sale: SaleCreate
+  ): Observable<SaleResponse> {
+
+    return this.http.post<SaleResponse>(
+      `${this.baseUrl}/sales`,
+      sale
+    );
+  }
+
 }
