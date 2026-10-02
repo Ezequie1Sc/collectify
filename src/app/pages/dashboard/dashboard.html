@@ -1,1 +1,52 @@
-<p>dashboard works!</p>
+<app-header />
+
+<main class="dashboard">
+
+  <section class="dashboard__hero">
+    <div>
+      <span class="dashboard__eyebrow">
+        INVENTARIO
+      </span>
+
+      <h1>Productos</h1>
+
+      <p>
+        Administra tus productos y consulta su disponibilidad.
+      </p>
+    </div>
+
+    <div class="dashboard__counter">
+      <strong>{{ products().length }}</strong>
+      <span>Productos</span>
+    </div>
+  </section>
+
+  @if (loading()) {
+
+    <p>Cargando productos...</p>
+
+  } @else if (error()) {
+
+    <p>{{ error() }}</p>
+
+  } @else if (products().length === 0) {
+
+    <app-empty-state />
+
+  } @else {
+
+    <section class="dashboard__products">
+
+      @for (product of products(); track product.id) {
+
+        <app-product-card
+          [product]="product"
+        />
+
+      }
+
+    </section>
+
+  }
+
+</main>
