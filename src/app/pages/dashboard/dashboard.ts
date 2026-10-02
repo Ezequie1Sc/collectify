@@ -1,7 +1,8 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 
 import { Header } from '../../components/header/header';
 import { ProductCard } from '../../components/product-card/product-card';
+import { ProductForm } from '../../components/product-form/product-form';
 import { EmptyState } from '../../components/empty-state/empty-state';
 
 import { ApiService } from '../../core/services/api';
@@ -12,6 +13,7 @@ import { Product } from '../../core/models/product';
   imports: [
     Header,
     ProductCard,
+    ProductForm,
     EmptyState
   ],
   templateUrl: './dashboard.html',
@@ -19,14 +21,14 @@ import { Product } from '../../core/models/product';
 })
 export class Dashboard implements OnInit {
 
-  products = signal<Product[]>([]);
-  loading = signal(true);
-  error = signal('');
+  private readonly api = inject(ApiService);
 
-  // Por ahora utilizamos el usuario que ya creaste en Supabase.
-  ownerId = '7c29ed96-5076-402b-a748-0d288ed95298';
+  readonly ownerId =
+    '7c29ed96-5076-402b-a748-0d288ed95298';
 
-  constructor(private readonly api: ApiService) {}
+  readonly products = signal<Product[]>([]);
+  readonly loading = signal(true);
+  readonly error = signal('');
 
   ngOnInit(): void {
     this.loadProducts();
@@ -43,10 +45,24 @@ export class Dashboard implements OnInit {
       },
 
       error: (error) => {
-        console.error('Error al cargar productos:', error);
-        this.error.set('No se pudieron cargar los productos.');
+        console.error(
+          'Error al cargar productos:',
+          error
+        );
+
+        this.error.set(
+          'No se pudieron cargar los productos.'
+        );
+
         this.loading.set(false);
       }
     });
+  }
+
+  getTotalStock(): number {
+    return this.products().reduce(
+      (total, product) => total + product.stock,
+      0
+    );
   }
 }
