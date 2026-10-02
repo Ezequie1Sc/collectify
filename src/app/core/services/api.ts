@@ -15,6 +15,15 @@ import {
   SaleResponse
 } from '../models/sale';
 
+import {
+  Partner,
+  PartnerCreate,
+  PartnerUpdate,
+  PartnersResponse,
+  PartnerResponse
+} from '../models/partner';
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -22,12 +31,13 @@ export class ApiService {
 
   private readonly http = inject(HttpClient);
 
-  private readonly baseUrl = 'http://127.0.0.1:8000';
+  private readonly baseUrl =
+    'http://127.0.0.1:8000';
 
 
-  // ============================================
-  // GET PRODUCTS
-  // ============================================
+  // =========================================================
+  // PRODUCTS
+  // =========================================================
 
   getProducts(
     ownerId: string
@@ -38,10 +48,6 @@ export class ApiService {
     );
   }
 
-
-  // ============================================
-  // CREATE PRODUCT
-  // ============================================
 
   createProduct(
     product: ProductCreate
@@ -54,10 +60,6 @@ export class ApiService {
   }
 
 
-  // ============================================
-  // UPDATE PRODUCT
-  // ============================================
-
   updateProduct(
     productId: string,
     product: ProductUpdate
@@ -69,10 +71,6 @@ export class ApiService {
     );
   }
 
-
-  // ============================================
-  // DELETE PRODUCT
-  // ============================================
 
   deleteProduct(
     productId: string
@@ -94,9 +92,9 @@ export class ApiService {
   }
 
 
-  // ============================================
-  // CREATE SALE
-  // ============================================
+  // =========================================================
+  // SALES
+  // =========================================================
 
   createSale(
     sale: SaleCreate
@@ -105,6 +103,61 @@ export class ApiService {
     return this.http.post<SaleResponse>(
       `${this.baseUrl}/sales`,
       sale
+    );
+  }
+
+
+  // =========================================================
+  // PARTNERS
+  // =========================================================
+
+  getPartners(): Observable<PartnersResponse> {
+
+    return this.http.get<PartnersResponse>(
+      `${this.baseUrl}/partners`
+    );
+  }
+
+
+  createPartner(
+    partner: PartnerCreate
+  ): Observable<PartnerResponse> {
+
+    return this.http.post<PartnerResponse>(
+      `${this.baseUrl}/partners`,
+      partner
+    );
+  }
+
+
+  updatePartner(
+    partnerId: string,
+    partner: PartnerUpdate
+  ): Observable<PartnerResponse> {
+
+    return this.http.patch<PartnerResponse>(
+      `${this.baseUrl}/partners/${partnerId}`,
+      partner
+    );
+  }
+
+
+  deletePartner(
+    partnerId: string
+  ): Observable<{
+    message: string;
+    deleted: boolean;
+    deactivated: boolean;
+    data: Partner;
+  }> {
+
+    return this.http.delete<{
+      message: string;
+      deleted: boolean;
+      deactivated: boolean;
+      data: Partner;
+    }>(
+      `${this.baseUrl}/partners/${partnerId}`
     );
   }
 
