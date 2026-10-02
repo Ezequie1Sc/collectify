@@ -1,33 +1,23 @@
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { Product } from '../models/product';
-
-export interface ProductCreate {
-  owner_id: string;
-  name: string;
-  description?: string | null;
-  category?: string | null;
-  sku?: string | null;
-  price: number;
-  cost?: number | null;
-  stock: number;
-  image_url?: string | null;
-}
-
-export interface ProductsResponse {
-  data: Product[];
-}
+import {
+  Product,
+  ProductCreate,
+  ProductUpdate,
+  ProductsResponse,
+  ProductResponse
+} from '../models/product';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
 
-  private readonly baseUrl = 'http://127.0.0.1:8000';
+  private readonly http = inject(HttpClient);
 
-  constructor(private readonly http: HttpClient) {}
+  private readonly baseUrl = 'http://127.0.0.1:8000';
 
   getProducts(ownerId: string): Observable<ProductsResponse> {
     return this.http.get<ProductsResponse>(
@@ -35,9 +25,21 @@ export class ApiService {
     );
   }
 
-  createProduct(product: ProductCreate): Observable<ProductsResponse> {
+  createProduct(
+    product: ProductCreate
+  ): Observable<ProductsResponse> {
     return this.http.post<ProductsResponse>(
       `${this.baseUrl}/products`,
+      product
+    );
+  }
+
+  updateProduct(
+    productId: string,
+    product: ProductUpdate
+  ): Observable<ProductResponse> {
+    return this.http.patch<ProductResponse>(
+      `${this.baseUrl}/products/${productId}`,
       product
     );
   }
