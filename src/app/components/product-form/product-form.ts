@@ -1,90 +1,165 @@
-import { Component, inject, output, signal } from '@angular/core';
 import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators
-} from '@angular/forms';
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  inject,
+  signal
+} from '@angular/core';
 
-import { ApiService, ProductCreate } from '../../core/services/api';
+import { FormsModule } from '@angular/forms';
+
+import { ApiService } from '../../core/services/api';
+
+import {
+  Product,
+  ProductCreate,
+  ProductUpdate
+} from '../../core/models/product';
 
 @Component({
   selector: 'app-product-form',
-  imports: [ReactiveFormsModule],
+  imports: [FormsModule],
   templateUrl: './product-form.html',
   styleUrl: './product-form.scss'
 })
-export class ProductForm {
+export class ProductForm implements OnChanges {
 
-  private readonly fb = inject(FormBuilder);
   private readonly api = inject(ApiService);
 
-  readonly productCreated = output<void>();
+  @Input()
+  editingProduct: Product | null = null;
 
-  readonly loading = signal(false);
-  readonly error = signal('');
-  readonly success = signal('');
+  @Output()
+  productSaved = new EventEmitter<void>();
 
-  readonly ownerId = '7c29ed96-5076-402b-a748-0d288ed95298';
+  @Output()
+  cancelled = new EventEmitter<void>();
 
-  readonly form = this.fb.nonNullable.group({
-    name: ['', [Validators.required, Validators.minLength(2)]],
-    description: [''],
-    category: [''],
-    sku: [''],
-    price: [0, [Validators.required, Validators.min(0.01)]],
-    cost: [0, [Validators.min(0)]],
-    stock: [0, [Validators.required, Validators.min(0)]],
-    image_url: ['']
-  });
+  protected readonly loading = signal(false);
 
-  submit(): void {
-    this.error.set('');
+  protected readonly success = signal('');
+
+  protected readonly error = signal('');
+
+  protected product: ProductCreate = this.createEmptyProduct();
+
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes['editingProduct']) {
+
+      const product = changes['editingProduct'].currentValue;
+
+      if (product) {
+        this.loadProductForEditing(product);
+      } else {
+        this.resetForm();
+      }
+    }
+  }
+
+  protected get isEditing(): boolean {
+    return this.editingProduct !== null;
+  }
+
+  private createEmptyProduct(): ProductCreate {
+    return {
+      owner_id: '7c29ed96-5076-402b-a748-0d288ed95298',
+      name: '',
+      description: '',
+      category: '',
+      sku: '',
+      price: 0,
+      cost: 0,
+      stock: 0,
+      image_url: ''
+    };
+  }
+
+  private loadProductForEditing(product: Product): void {
+
     this.success.set('');
+    this.error.set('');
 
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    this.product = {
+      owner_id: product.owner_id,
+      name: product.name,
+      description: product.description ?? '',
+      category: product.category ?? '',
+      sku: product.sku ?? '',
+      price: product.price,
+      cost: product.cost ?? 0,
+      stock: product.stock,
+      image_url: product.image_url ?? ''
+    };
+  }
+
+  protected saveProduct(): void {
+
+    this.success.set('');
+    this.error.set('');
+
+    if (!this.product.name.trim()) {
+      this.error.set(
+        'El nombre del producto es obligatorio.'
+      );
+
+      return;
+    }
+
+    if (this.product.price <= 0) {
+      this.error.set(
+        'El precio debe ser mayor a 0.'
+      );
+
+      return;
+    }
+
+    if (this.product.stock < 0) {
+      this.error.set(
+        'El stock no puede ser negativo.'
+      );
+
       return;
     }
 
     this.loading.set(true);
 
-    const value = this.form.getRawValue();
+    if (this.editingProduct) {
+      this.updateProduct();
+    } else {
+      this.createProduct();
+    }
+  }
 
-    const product: ProductCreate = {
-      owner_id: this.ownerId,
-      name: value.name,
-      description: value.description || null,
-      category: value.category || null,
-      sku: value.sku || null,
-      price: value.price,
-      cost: value.cost,
-      stock: value.stock,
-      image_url: value.image_url || null
-    };
+  private createProduct(): void {
 
-    this.api.createProduct(product).subscribe({
+    this.api.createProduct(this.product).subscribe({
+
       next: () => {
+
         this.loading.set(false);
-        this.success.set('Producto creado correctamente.');
 
-        this.form.reset({
-          name: '',
-          description: '',
-          category: '',
-          sku: '',
-          price: 0,
-          cost: 0,
-          stock: 0,
-          image_url: ''
-        });
+        this.success.set(
+          'Producto creado correctamente.'
+        );
 
-        this.productCreated.emit();
+        this.resetForm();
+
+        this.productSaved.emit();
       },
 
       error: (error) => {
-        console.error('Error al crear producto:', error);
+
+        console.error(
+          'Error al crear producto:',
+          error
+        );
 
         this.loading.set(false);
+
         this.error.set(
           error?.error?.detail ||
           error?.error?.error ||
@@ -92,5 +167,74 @@ export class ProductForm {
         );
       }
     });
+  }
+
+  private updateProduct(): void {
+
+    if (!this.editingProduct) {
+      return;
+    }
+
+    const productId = this.editingProduct.id;
+
+    const updateData: ProductUpdate = {
+      name: this.product.name,
+      description: this.product.description,
+      category: this.product.category,
+      sku: this.product.sku,
+      price: this.product.price,
+      cost: this.product.cost,
+      stock: this.product.stock,
+      image_url: this.product.image_url
+    };
+
+    this.api.updateProduct(
+      productId,
+      updateData
+    ).subscribe({
+
+      next: () => {
+
+        this.loading.set(false);
+
+        this.success.set(
+          'Producto actualizado correctamente.'
+        );
+
+        this.productSaved.emit();
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error al actualizar producto:',
+          error
+        );
+
+        this.loading.set(false);
+
+        this.error.set(
+          error?.error?.detail ||
+          error?.error?.error ||
+          'No se pudo actualizar el producto.'
+        );
+      }
+    });
+  }
+
+  protected cancelEdit(): void {
+
+    this.resetForm();
+
+    this.cancelled.emit();
+  }
+
+  private resetForm(): void {
+
+    this.product = this.createEmptyProduct();
+
+    this.success.set('');
+
+    this.error.set('');
   }
 }
