@@ -2,18 +2,20 @@
 
 <main class="dashboard">
 
+  <!-- ========================= -->
   <!-- HERO -->
+  <!-- ========================= -->
+
   <section class="dashboard__hero">
 
     <div class="dashboard__hero-content">
 
-      <span class="dashboard__eyebrow">
+      <span class="eyebrow">
         COLLECTIFY
       </span>
 
       <h1>
-        Tu inventario,
-        <span> bajo control.</span>
+        Tu inventario, bajo control.
       </h1>
 
       <p>
@@ -26,23 +28,27 @@
     <div class="dashboard__stats">
 
       <div class="stat-card">
-        <span class="stat-card__label">
+
+        <span>
           PRODUCTOS
         </span>
 
         <strong>
           {{ products().length }}
         </strong>
+
       </div>
 
       <div class="stat-card">
-        <span class="stat-card__label">
+
+        <span>
           STOCK TOTAL
         </span>
 
         <strong>
           {{ getTotalStock() }}
         </strong>
+
       </div>
 
     </div>
@@ -50,13 +56,17 @@
   </section>
 
 
+  <!-- ========================= -->
   <!-- INVENTARIO -->
+  <!-- ========================= -->
+
   <section class="dashboard__inventory">
 
-    <div class="section-header">
+    <div class="section-heading">
 
       <div>
-        <span class="section-header__eyebrow">
+
+        <span class="eyebrow">
           INVENTARIO
         </span>
 
@@ -67,26 +77,28 @@
         <p>
           Consulta y administra los productos registrados.
         </p>
+
       </div>
 
       <button
         type="button"
-        class="section-header__refresh"
+        class="refresh-button"
         (click)="loadProducts()"
         [disabled]="loading()"
       >
-        Actualizar
+        {{ loading() ? 'Cargando...' : 'Actualizar' }}
       </button>
 
     </div>
 
 
+    <!-- ========================= -->
     <!-- LOADING -->
+    <!-- ========================= -->
+
     @if (loading()) {
 
-      <div class="state-message">
-        <div class="loader"></div>
-
+      <div class="dashboard__message">
         <p>
           Cargando productos...
         </p>
@@ -94,14 +106,13 @@
 
     }
 
+    <!-- ========================= -->
     <!-- ERROR -->
+    <!-- ========================= -->
+
     @else if (error()) {
 
-      <div class="state-message state-message--error">
-
-        <h3>
-          No pudimos cargar el inventario
-        </h3>
+      <div class="dashboard__message dashboard__message--error">
 
         <p>
           {{ error() }}
@@ -118,22 +129,32 @@
 
     }
 
+    <!-- ========================= -->
     <!-- EMPTY -->
+    <!-- ========================= -->
+
     @else if (products().length === 0) {
 
       <app-empty-state />
 
     }
 
+    <!-- ========================= -->
     <!-- PRODUCTS -->
+    <!-- ========================= -->
+
     @else {
 
       <div class="products-grid">
 
-        @for (product of products(); track product.id) {
+        @for (
+          product of products();
+          track product.id
+        ) {
 
           <app-product-card
             [product]="product"
+            (edit)="editProduct($event)"
           />
 
         }
@@ -145,29 +166,41 @@
   </section>
 
 
-  <!-- NUEVO PRODUCTO -->
-  <section class="dashboard__create">
+  <!-- ========================= -->
+  <!-- PRODUCT FORM -->
+  <!-- ========================= -->
 
-    <div class="section-header">
+  <section class="dashboard__management">
+
+    <div class="section-heading">
 
       <div>
-        <span class="section-header__eyebrow">
+
+        <span class="eyebrow">
           GESTIÓN
         </span>
 
         <h2>
-          Agregar producto
+          {{ editingProduct() ? 'Editar producto' : 'Agregar producto' }}
         </h2>
 
         <p>
-          Registra un nuevo producto en tu inventario.
+          {{
+            editingProduct()
+              ? 'Modifica la información del producto seleccionado.'
+              : 'Registra un nuevo producto en tu inventario.'
+          }}
         </p>
+
       </div>
 
     </div>
 
+
     <app-product-form
-      (productCreated)="loadProducts()"
+      [editingProduct]="editingProduct()"
+      (productSaved)="onProductSaved()"
+      (cancelled)="cancelEdit()"
     />
 
   </section>
