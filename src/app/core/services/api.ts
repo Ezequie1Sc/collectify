@@ -17,19 +17,7 @@ export interface Product {
   updated_at: string;
 }
 
-export interface ProductCreate {
-  owner_id: string;
-  name: string;
-  description?: string | null;
-  category?: string | null;
-  sku?: string | null;
-  price: number;
-  cost?: number | null;
-  stock: number;
-  image_url?: string | null;
-}
-
-interface ProductsResponse {
+export interface ProductsResponse {
   data: Product[];
 }
 
@@ -43,14 +31,7 @@ export class ApiService {
 
   getProducts(ownerId: string): Observable<ProductsResponse> {
     return this.http.get<ProductsResponse>(
-      `${this.baseUrl}/products/${ownerId}`,
-    );
-  }
-
-  createProduct(product: ProductCreate): Observable<ProductsResponse> {
-    return this.http.post<ProductsResponse>(
-      `${this.baseUrl}/products`,
-      product,
+      `${this.baseUrl}/products/${ownerId}`
     );
   }
 }
