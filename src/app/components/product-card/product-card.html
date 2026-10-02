@@ -1,1 +1,33 @@
-<p>product-card works!</p>
+<article class="product-card">
+  <div class="product-card__top">
+    <span class="product-card__category">
+      {{ product().category || 'Sin categoría' }}
+    </span>
+
+    <span class="product-card__stock">
+      {{ product().stock }} disponibles
+    </span>
+  </div>
+
+  <h2>{{ product().name }}</h2>
+
+  @if (product().description) {
+    <p>{{ product().description }}</p>
+  }
+
+  @if (product().sku) {
+    <small>SKU: {{ product().sku }}</small>
+  }
+
+  <div class="product-card__footer">
+    <div>
+      <span>PRECIO</span>
+      <strong>${{ product().price }}</strong>
+    </div>
+
+    <div>
+      <span>COSTO</span>
+      <strong>${{ product().cost ?? 0 }}</strong>
+    </div>
+  </div>
+</article>
