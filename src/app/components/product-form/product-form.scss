@@ -1,121 +1,196 @@
 .product-form {
-  max-width: 720px;
+  width: min(100%, 760px);
   margin: 0 auto;
   padding: 32px;
+
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #dfe4ea;
   border-radius: 16px;
 
-  &__header {
-    margin-bottom: 28px;
-
-    span {
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      font-weight: 600;
-      color: #64748b;
-    }
-
-    h2 {
-      margin: 6px 0;
-      font-size: 28px;
-    }
-
-    p {
-      margin: 0;
-      color: #64748b;
-    }
-  }
-
-  &__success,
-  &__error {
-    padding: 12px 16px;
-    margin-bottom: 20px;
-    border-radius: 8px;
-    font-size: 14px;
-  }
-
-  &__success {
-    background: #ecfdf5;
-    color: #047857;
-  }
-
-  &__error {
-    background: #fef2f2;
-    color: #b91c1c;
-  }
-
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
+  box-sizing: border-box;
 }
 
-.form-group {
+.product-form__header {
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 6px;
+
+  color: #667085;
+
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.product-form__header h2 {
+  margin: 0 0 6px;
+
+  color: #101828;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.product-form__header p {
+  margin: 0;
+
+  color: #667085;
+  font-size: 14px;
+}
+
+.message {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+
+  border-radius: 8px;
+
+  font-size: 13px;
+}
+
+.message--success {
+  background: #ecfdf3;
+  border: 1px solid #abefc6;
+  color: #067647;
+}
+
+.message--error {
+  background: #fef3f2;
+  border: 1px solid #fecdca;
+  color: #b42318;
+}
+
+.form {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-
-  label {
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  input,
-  textarea {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 11px 13px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font: inherit;
-    background: #fff;
-
-    &:focus {
-      outline: none;
-      border-color: #334155;
-    }
-  }
-
-  textarea {
-    min-height: 100px;
-    resize: vertical;
-  }
-
-  small {
-    color: #b91c1c;
-  }
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 18px;
 }
 
-button {
-  margin-top: 8px;
-  padding: 13px 18px;
-  border: 0;
-  border-radius: 8px;
-  background: #0f172a;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
+.form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
 
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+.form__field label {
+  color: #344054;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.form__field input,
+.form__field textarea {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 11px 13px;
+
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+
+  background: #ffffff;
+  color: #101828;
+
+  font-family: inherit;
+  font-size: 14px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.form__field input {
+  height: 42px;
+}
+
+.form__field textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form__field input:focus,
+.form__field textarea:focus {
+  border-color: #344054;
+
+  box-shadow:
+    0 0 0 3px rgba(16, 24, 40, 0.08);
+}
+
+.form__row {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+}
+
+.form__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  margin-top: 4px;
+}
+
+.form__submit,
+.form__cancel {
+  width: 100%;
+  min-height: 44px;
+
+  border-radius: 8px;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.form__submit {
+  border: 0;
+
+  background: #101828;
+  color: #ffffff;
+}
+
+.form__submit:hover:not(:disabled) {
+  background: #1d2939;
+}
+
+.form__cancel {
+  border: 1px solid #d0d5dd;
+
+  background: #ffffff;
+  color: #344054;
+}
+
+.form__cancel:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.form__submit:disabled,
+.form__cancel:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 @media (max-width: 640px) {
+
   .product-form {
-    padding: 20px;
+    padding: 22px;
+    border-radius: 12px;
   }
 
-  .form-row {
+  .product-form__header h2 {
+    font-size: 24px;
+  }
+
+  .form__row {
     grid-template-columns: 1fr;
   }
 }
