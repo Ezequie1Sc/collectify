@@ -1,5 +1,9 @@
 <article class="product-card">
 
+  <!-- ========================================= -->
+  <!-- TOP -->
+  <!-- ========================================= -->
+
   <div class="product-card__top">
 
     <span class="product-card__category">
@@ -13,6 +17,10 @@
   </div>
 
 
+  <!-- ========================================= -->
+  <!-- CONTENT -->
+  <!-- ========================================= -->
+
   <div class="product-card__content">
 
     <h3>
@@ -20,19 +28,27 @@
     </h3>
 
     @if (product.description) {
+
       <p class="product-card__description">
         {{ product.description }}
       </p>
+
     }
 
     @if (product.sku) {
+
       <p class="product-card__sku">
         SKU: {{ product.sku }}
       </p>
+
     }
 
   </div>
 
+
+  <!-- ========================================= -->
+  <!-- FOOTER -->
+  <!-- ========================================= -->
 
   <div class="product-card__footer">
 
@@ -64,12 +80,33 @@
   </div>
 
 
-  <button
-    type="button"
-    class="product-card__edit"
-    (click)="editProduct()"
-  >
-    Editar producto
-  </button>
+  <!-- ========================================= -->
+  <!-- ACTIONS -->
+  <!-- ========================================= -->
+
+  <div class="product-card__actions">
+
+    <!-- EDITAR -->
+
+    <button
+      type="button"
+      class="product-card__edit"
+      (click)="editProduct()"
+    >
+      Editar producto
+    </button>
+
+
+    <!-- ELIMINAR -->
+
+    <button
+      type="button"
+      class="product-card__delete"
+      (click)="deleteProduct()"
+    >
+      Eliminar producto
+    </button>
+
+  </div>
 
 </article>
