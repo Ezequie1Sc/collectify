@@ -173,3 +173,109 @@
   }
 
 }
+/* =========================
+   ACCIONES
+   ========================= */
+
+.product-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  margin-top: 22px;
+}
+
+
+/* =========================
+   BOTÓN EDITAR
+   ========================= */
+
+.product-card__edit {
+  width: 100%;
+
+  padding: 11px 16px;
+
+  background: #ffffff;
+  color: #111827;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.product-card__edit:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.product-card__edit:active {
+  transform: translateY(1px);
+}
+
+
+/* =========================
+   BOTÓN ELIMINAR
+   ========================= */
+
+.product-card__delete {
+  width: 100%;
+
+  padding: 11px 16px;
+
+  background: #ffffff;
+  color: #b42318;
+
+  border: 1px solid #f0b8b3;
+  border-radius: 8px;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.product-card__delete:hover {
+  background: #fff5f4;
+  border-color: #e58b84;
+  color: #912018;
+}
+
+.product-card__delete:active {
+  transform: translateY(1px);
+}
+
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 600px) {
+
+  .product-card__actions {
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .product-card__edit,
+  .product-card__delete {
+    padding: 10px 14px;
+  }
+
+}
