@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 
 @Component({
-  imports: [],
   selector: 'app-empty-state',
-  styleUrl: './empty-state.scss',
+  imports: [],
   templateUrl: './empty-state.html',
+  styleUrl: './empty-state.scss'
 })
 export class EmptyState {}
