@@ -1,33 +1,75 @@
 <article class="product-card">
+
   <div class="product-card__top">
+
     <span class="product-card__category">
-      {{ product().category || 'Sin categoría' }}
+      {{ product.category || 'Sin categoría' }}
     </span>
 
     <span class="product-card__stock">
-      {{ product().stock }} disponibles
+      {{ product.stock }} disponibles
     </span>
+
   </div>
 
-  <h2>{{ product().name }}</h2>
 
-  @if (product().description) {
-    <p>{{ product().description }}</p>
-  }
+  <div class="product-card__content">
 
-  @if (product().sku) {
-    <small>SKU: {{ product().sku }}</small>
-  }
+    <h3>
+      {{ product.name }}
+    </h3>
+
+    @if (product.description) {
+      <p class="product-card__description">
+        {{ product.description }}
+      </p>
+    }
+
+    @if (product.sku) {
+      <p class="product-card__sku">
+        SKU: {{ product.sku }}
+      </p>
+    }
+
+  </div>
+
 
   <div class="product-card__footer">
-    <div>
-      <span>PRECIO</span>
-      <strong>${{ product().price }}</strong>
+
+    <div class="product-card__price">
+
+      <span>
+        PRECIO
+      </span>
+
+      <strong>
+        ${{ product.price }}
+      </strong>
+
     </div>
 
-    <div>
-      <span>COSTO</span>
-      <strong>${{ product().cost ?? 0 }}</strong>
+
+    <div class="product-card__cost">
+
+      <span>
+        COSTO
+      </span>
+
+      <strong>
+        ${{ product.cost || 0 }}
+      </strong>
+
     </div>
+
   </div>
+
+
+  <button
+    type="button"
+    class="product-card__edit"
+    (click)="editProduct()"
+  >
+    Editar producto
+  </button>
+
 </article>
