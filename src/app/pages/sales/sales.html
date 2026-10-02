@@ -1,1 +1,572 @@
-<p>sales works!</p>
+<main class="sales">
+
+  <!-- ========================================= -->
+  <!-- HEADER -->
+  <!-- ========================================= -->
+
+  <section class="sales__header">
+
+    <div class="sales__header-content">
+
+      <span class="eyebrow">
+        COLLECTIFY
+      </span>
+
+      <h1>
+        Registrar venta
+      </h1>
+
+      <p>
+        Selecciona productos, agrega cantidades y genera el ticket.
+      </p>
+
+    </div>
+
+
+    <div class="sales__stats">
+
+      <div class="stat-card">
+
+        <span>
+          PRODUCTOS
+        </span>
+
+        <strong>
+          {{ cartQuantity() }}
+        </strong>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <span>
+          TOTAL
+        </span>
+
+        <strong>
+          ${{ cartTotal().toFixed(2) }}
+        </strong>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ========================================= -->
+  <!-- MENSAJE DE ERROR -->
+  <!-- ========================================= -->
+
+  @if (error()) {
+
+    <div class="sales__message sales__message--error">
+
+      {{ error() }}
+
+    </div>
+
+  }
+
+
+  <!-- ========================================= -->
+  <!-- VENTA REGISTRADA -->
+  <!-- ========================================= -->
+
+  @if (sale(); as registeredSale) {
+
+    <div class="sales__message sales__message--success">
+
+      Venta registrada correctamente.
+      Ticket #{{ registeredSale.sale.ticket_number }}.
+
+    </div>
+
+  }
+
+
+  <!-- ========================================= -->
+  <!-- CONTENIDO -->
+  <!-- ========================================= -->
+
+  <section class="sales__content">
+
+
+    <!-- ======================================= -->
+    <!-- INVENTARIO -->
+    <!-- ======================================= -->
+
+    <section class="inventory">
+
+      <div class="section-heading">
+
+        <div>
+
+          <span class="eyebrow">
+            INVENTARIO
+          </span>
+
+          <h2>
+            Productos
+          </h2>
+
+        </div>
+
+
+        <span class="product-count">
+          {{ filteredProducts().length }}
+        </span>
+
+      </div>
+
+
+      <!-- ===================================== -->
+      <!-- BUSCADOR -->
+      <!-- ===================================== -->
+
+      <div class="search">
+
+        <input
+          type="text"
+          placeholder="Buscar producto, categoría o SKU..."
+          [ngModel]="search()"
+          (ngModelChange)="onSearchChange($event)"
+        />
+
+      </div>
+
+
+      <!-- ===================================== -->
+      <!-- LOADING -->
+      <!-- ===================================== -->
+
+      @if (loading()) {
+
+        <div class="inventory__message">
+
+          <p>
+            Cargando productos...
+          </p>
+
+        </div>
+
+      }
+
+
+      <!-- ===================================== -->
+      <!-- ERROR -->
+      <!-- ===================================== -->
+
+      @else if (error() && products().length === 0) {
+
+        <div class="inventory__message inventory__message--error">
+
+          <p>
+            No se pudieron cargar los productos.
+          </p>
+
+          <button
+            type="button"
+            (click)="loadProducts()"
+          >
+            Intentar nuevamente
+          </button>
+
+        </div>
+
+      }
+
+
+      <!-- ===================================== -->
+      <!-- SIN PRODUCTOS -->
+      <!-- ===================================== -->
+
+      @else if (filteredProducts().length === 0) {
+
+        <div class="inventory__message">
+
+          <div class="inventory__empty-icon">
+            +
+          </div>
+
+          <h3>
+            No hay productos
+          </h3>
+
+          <p>
+            No encontramos productos que coincidan con tu búsqueda.
+          </p>
+
+        </div>
+
+      }
+
+
+      <!-- ===================================== -->
+      <!-- LISTA DE PRODUCTOS -->
+      <!-- ===================================== -->
+
+      @else {
+
+        <div class="products-list">
+
+          @for (
+            product of filteredProducts();
+            track product.id
+          ) {
+
+            <article class="product-item">
+
+              <!-- ============================= -->
+              <!-- INFORMACIÓN -->
+              <!-- ============================= -->
+
+              <div class="product-item__info">
+
+                @if (product.category) {
+
+                  <span class="product-item__category">
+                    {{ product.category }}
+                  </span>
+
+                }
+
+                <h3>
+                  {{ product.name }}
+                </h3>
+
+                @if (product.sku) {
+
+                  <p class="product-item__sku">
+                    SKU: {{ product.sku }}
+                  </p>
+
+                }
+
+              </div>
+
+
+              <!-- ============================= -->
+              <!-- PRECIO / STOCK -->
+              <!-- ============================= -->
+
+              <div class="product-item__details">
+
+                <span
+                  class="product-item__stock"
+                  [class.product-item__stock--empty]="
+                    product.stock === 0
+                  "
+                >
+                  {{ product.stock }}
+                  disponibles
+                </span>
+
+                <strong>
+                  ${{ product.price.toFixed(2) }}
+                </strong>
+
+              </div>
+
+
+              <!-- ============================= -->
+              <!-- BOTÓN -->
+              <!-- ============================= -->
+
+              <button
+                type="button"
+                class="product-item__add"
+                [disabled]="
+                  product.stock === 0 ||
+                  getCartQuantity(product.id) >= product.stock
+                "
+                (click)="addToCart(product)"
+              >
+
+                @if (product.stock === 0) {
+
+                  Agotado
+
+                } @else if (
+                  getCartQuantity(product.id) >= product.stock
+                ) {
+
+                  Máximo
+
+                } @else {
+
+                  Agregar
+
+                }
+
+              </button>
+
+            </article>
+
+          }
+
+        </div>
+
+      }
+
+    </section>
+
+
+    <!-- ========================================= -->
+    <!-- TICKET -->
+    <!-- ========================================= -->
+
+    <aside class="ticket">
+
+      <div class="section-heading">
+
+        <div>
+
+          <span class="eyebrow">
+            VENTA
+          </span>
+
+          <h2>
+            @if (sale(); as registeredSale) {
+
+              Ticket #{{ registeredSale.sale.ticket_number }}
+
+            } @else {
+
+              Ticket
+
+            }
+          </h2>
+
+        </div>
+
+
+        @if (hasItems()) {
+
+          <button
+            type="button"
+            class="ticket__clear"
+            (click)="clearCart()"
+          >
+            Vaciar
+          </button>
+
+        }
+
+      </div>
+
+
+      <!-- ===================================== -->
+      <!-- TICKET VACÍO -->
+      <!-- ===================================== -->
+
+      @if (!hasItems() && !sale()) {
+
+        <div class="ticket__empty">
+
+          <div class="ticket__empty-icon">
+            +
+          </div>
+
+          <h3>
+            Ticket vacío
+          </h3>
+
+          <p>
+            Agrega productos desde el inventario
+            para comenzar la venta.
+          </p>
+
+        </div>
+
+      }
+
+
+      <!-- ===================================== -->
+      <!-- PRODUCTOS DEL TICKET -->
+      <!-- ===================================== -->
+
+      @if (hasItems()) {
+
+        <div class="ticket__items">
+
+          @for (
+            item of cart();
+            track item.product.id
+          ) {
+
+            <div class="ticket-item">
+
+              <div class="ticket-item__info">
+
+                <h3>
+                  {{ item.product.name }}
+                </h3>
+
+                <span>
+                  ${{ item.product.price.toFixed(2) }}
+                  c/u
+                </span>
+
+              </div>
+
+
+              <button
+                type="button"
+                class="ticket-item__remove"
+                (click)="removeFromCart(item.product.id)"
+                aria-label="Eliminar producto"
+              >
+                ×
+              </button>
+
+
+              <div class="ticket-item__bottom">
+
+                <div class="quantity">
+
+                  <button
+                    type="button"
+                    (click)="decreaseQuantity(item.product.id)"
+                    aria-label="Disminuir cantidad"
+                  >
+                    −
+                  </button>
+
+                  <span>
+                    {{ item.quantity }}
+                  </span>
+
+                  <button
+                    type="button"
+                    [disabled]="
+                      item.quantity >= item.product.stock
+                    "
+                    (click)="increaseQuantity(item.product.id)"
+                    aria-label="Aumentar cantidad"
+                  >
+                    +
+                  </button>
+
+                </div>
+
+
+                <strong>
+                  ${{
+                    (
+                      item.product.price *
+                      item.quantity
+                    ).toFixed(2)
+                  }}
+                </strong>
+
+              </div>
+
+            </div>
+
+          }
+
+        </div>
+
+
+        <!-- =================================== -->
+        <!-- TOTAL -->
+        <!-- =================================== -->
+
+        <div class="ticket__summary">
+
+          <div>
+
+            <span>
+              TOTAL
+            </span>
+
+            <strong>
+              ${{ cartTotal().toFixed(2) }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================== -->
+        <!-- REGISTRAR -->
+        <!-- =================================== -->
+
+        <button
+          type="button"
+          class="ticket__submit"
+          (click)="registerSale()"
+        >
+          Registrar venta
+        </button>
+
+      }
+
+
+      <!-- ===================================== -->
+      <!-- VENTA REGISTRADA -->
+      <!-- ===================================== -->
+
+      @if (sale(); as registeredSale) {
+
+        <div class="ticket__registered">
+
+          <div class="ticket__registered-row">
+
+            <span>
+              Total
+            </span>
+
+            <strong>
+              ${{ registeredSale.summary.total.toFixed(2) }}
+            </strong>
+
+          </div>
+
+
+          <div class="ticket__registered-row">
+
+            <span>
+              Costo
+            </span>
+
+            <strong>
+              ${{ registeredSale.summary.cost.toFixed(2) }}
+            </strong>
+
+          </div>
+
+
+          <div class="ticket__registered-row">
+
+            <span>
+              Ganancia
+            </span>
+
+            <strong>
+              ${{ registeredSale.summary.profit.toFixed(2) }}
+            </strong>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="ticket__new-sale"
+            (click)="newSale()"
+          >
+            Nueva venta
+          </button>
+
+        </div>
+
+      }
+
+    </aside>
+
+  </section>
+
+</main>
