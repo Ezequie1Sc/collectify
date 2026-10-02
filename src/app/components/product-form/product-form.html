@@ -1,128 +1,254 @@
-<section class="product-form">
+<section
+  id="product-form"
+  class="product-form"
+>
 
   <div class="product-form__header">
-    <span>INVENTARIO</span>
-    <h2>Nuevo producto</h2>
-    <p>Agrega un producto a tu inventario.</p>
+
+    <span class="eyebrow">
+      {{ isEditing ? 'EDICIÓN' : 'INVENTARIO' }}
+    </span>
+
+    <h2>
+      {{ isEditing ? 'Editar producto' : 'Nuevo producto' }}
+    </h2>
+
+    <p>
+      {{
+        isEditing
+          ? 'Actualiza la información de tu producto.'
+          : 'Agrega un producto a tu inventario.'
+      }}
+    </p>
+
   </div>
 
   @if (success()) {
-    <div class="product-form__success">
+    <div class="message message--success">
       {{ success() }}
     </div>
   }
 
   @if (error()) {
-    <div class="product-form__error">
+    <div class="message message--error">
       {{ error() }}
     </div>
   }
 
-  <form [formGroup]="form" (ngSubmit)="submit()">
+  <form
+    class="form"
+    (submit)="$event.preventDefault(); saveProduct()"
+  >
 
-    <div class="form-group">
-      <label for="name">Nombre</label>
+    <!-- Nombre -->
+
+    <div class="form__field">
+
+      <label for="name">
+        Nombre
+      </label>
+
       <input
         id="name"
         type="text"
-        formControlName="name"
+        name="name"
         placeholder="Ej. Funko Batman"
+        [(ngModel)]="product.name"
+        required
       />
 
-      @if (form.controls.name.touched && form.controls.name.invalid) {
-        <small>El nombre es obligatorio.</small>
-      }
     </div>
 
-    <div class="form-group">
-      <label for="description">Descripción</label>
+
+    <!-- Descripción -->
+
+    <div class="form__field">
+
+      <label for="description">
+        Descripción
+      </label>
+
       <textarea
         id="description"
-        formControlName="description"
+        name="description"
         placeholder="Descripción del producto"
+        [(ngModel)]="product.description"
+        rows="3"
       ></textarea>
+
     </div>
 
-    <div class="form-row">
 
-      <div class="form-group">
-        <label for="category">Categoría</label>
+    <!-- Categoría / SKU -->
+
+    <div class="form__row">
+
+      <div class="form__field">
+
+        <label for="category">
+          Categoría
+        </label>
+
         <input
           id="category"
           type="text"
-          formControlName="category"
+          name="category"
           placeholder="Ej. Funko"
+          [(ngModel)]="product.category"
         />
+
       </div>
 
-      <div class="form-group">
-        <label for="sku">SKU</label>
+
+      <div class="form__field">
+
+        <label for="sku">
+          SKU
+        </label>
+
         <input
           id="sku"
           type="text"
-          formControlName="sku"
+          name="sku"
           placeholder="Ej. FK-BAT-001"
+          [(ngModel)]="product.sku"
         />
+
       </div>
 
     </div>
 
-    <div class="form-row">
 
-      <div class="form-group">
-        <label for="price">Precio</label>
+    <!-- Precio / Costo -->
+
+    <div class="form__row">
+
+      <div class="form__field">
+
+        <label for="price">
+          Precio
+        </label>
+
         <input
           id="price"
           type="number"
-          formControlName="price"
+          name="price"
           min="0.01"
           step="0.01"
+          placeholder="0.00"
+          [(ngModel)]="product.price"
+          required
         />
+
       </div>
 
-      <div class="form-group">
-        <label for="cost">Costo</label>
+
+      <div class="form__field">
+
+        <label for="cost">
+          Costo
+        </label>
+
         <input
           id="cost"
           type="number"
-          formControlName="cost"
+          name="cost"
           min="0"
           step="0.01"
+          placeholder="0.00"
+          [(ngModel)]="product.cost"
         />
+
       </div>
 
     </div>
 
-    <div class="form-group">
-      <label for="stock">Stock</label>
+
+    <!-- Stock -->
+
+    <div class="form__field">
+
+      <label for="stock">
+        Stock
+      </label>
+
       <input
         id="stock"
         type="number"
-        formControlName="stock"
+        name="stock"
         min="0"
+        step="1"
+        placeholder="0"
+        [(ngModel)]="product.stock"
       />
+
     </div>
 
-    <div class="form-group">
-      <label for="image_url">URL de imagen</label>
+
+    <!-- Imagen -->
+
+    <div class="form__field">
+
+      <label for="image_url">
+        URL de imagen
+      </label>
+
       <input
         id="image_url"
         type="url"
-        formControlName="image_url"
+        name="image_url"
         placeholder="https://..."
+        [(ngModel)]="product.image_url"
       />
+
     </div>
 
-    <button
-      type="submit"
-      [disabled]="loading()"
-    >
-      @if (loading()) {
-        Creando...
-      } @else {
-        Crear producto
+
+    <!-- Acciones -->
+
+    <div class="form__actions">
+
+      <button
+        type="submit"
+        class="form__submit"
+        [disabled]="loading()"
+      >
+
+        @if (loading()) {
+
+          {{
+            isEditing
+              ? 'Guardando cambios...'
+              : 'Creando producto...'
+          }}
+
+        } @else {
+
+          {{
+            isEditing
+              ? 'Guardar cambios'
+              : 'Crear producto'
+          }}
+
+        }
+
+      </button>
+
+
+      @if (isEditing) {
+
+        <button
+          type="button"
+          class="form__cancel"
+          [disabled]="loading()"
+          (click)="cancelEdit()"
+        >
+          Cancelar edición
+        </button>
+
       }
-    </button>
+
+    </div>
 
   </form>
 
