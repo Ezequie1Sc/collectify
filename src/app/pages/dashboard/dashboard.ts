@@ -37,21 +37,24 @@ export class Dashboard implements OnInit {
 
   readonly error = signal('');
 
-  /**
-   * Producto que actualmente se está editando.
-   *
-   * null = estamos creando un producto nuevo.
-   */
   readonly editingProduct =
     signal<Product | null>(null);
+
+  readonly deletingProductId =
+    signal<string | null>(null);
+
+  // ============================================
+  // INIT
+  // ============================================
 
   ngOnInit(): void {
     this.loadProducts();
   }
 
-  /**
-   * Cargar productos desde la API.
-   */
+  // ============================================
+  // LOAD PRODUCTS
+  // ============================================
+
   loadProducts(): void {
 
     this.loading.set(true);
@@ -83,9 +86,10 @@ export class Dashboard implements OnInit {
     });
   }
 
-  /**
-   * Seleccionar un producto para editar.
-   */
+  // ============================================
+  // EDIT PRODUCT
+  // ============================================
+
   editProduct(product: Product): void {
 
     console.log(
@@ -95,7 +99,6 @@ export class Dashboard implements OnInit {
 
     this.editingProduct.set(product);
 
-    // Llevar al formulario.
     setTimeout(() => {
 
       document
@@ -106,20 +109,22 @@ export class Dashboard implements OnInit {
         });
 
     });
+
   }
 
-  /**
-   * Cancelar la edición.
-   */
+  // ============================================
+  // CANCEL EDIT
+  // ============================================
+
   cancelEdit(): void {
 
     this.editingProduct.set(null);
   }
 
-  /**
-   * Se ejecuta cuando ProductForm crea o actualiza
-   * correctamente un producto.
-   */
+  // ============================================
+  // PRODUCT SAVED
+  // ============================================
+
   onProductSaved(): void {
 
     this.editingProduct.set(null);
@@ -127,9 +132,103 @@ export class Dashboard implements OnInit {
     this.loadProducts();
   }
 
-  /**
-   * Stock total del inventario.
-   */
+  // ============================================
+  // DELETE PRODUCT
+  // ============================================
+
+  deleteProduct(product: Product): void {
+
+    if (!product.id) {
+      console.error(
+        'No se puede eliminar el producto porque no tiene ID.'
+      );
+
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Estás seguro de que deseas eliminar "${product.name}"?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.deletingProductId.set(product.id);
+    this.error.set('');
+
+    this.api.deleteProduct(product.id).subscribe({
+
+      next: (response) => {
+
+        console.log(
+          'Respuesta al eliminar producto:',
+          response
+        );
+
+        /*
+         * El backend puede:
+         *
+         * 1. Eliminar realmente el producto:
+         *    deleted = true
+         *
+         * 2. Desactivarlo porque tiene ventas:
+         *    deleted = false
+         *    deactivated = true
+         *
+         * En ambos casos dejamos de mostrarlo
+         * en el inventario actual.
+         */
+
+        this.products.update(products =>
+          products.filter(
+            currentProduct =>
+              currentProduct.id !== product.id
+          )
+        );
+
+        this.deletingProductId.set(null);
+
+        // Si el producto que se eliminó
+        // estaba siendo editado, cancelar edición.
+        if (
+          this.editingProduct()?.id === product.id
+        ) {
+          this.editingProduct.set(null);
+        }
+
+        console.log(
+          response.deleted
+            ? 'Producto eliminado correctamente.'
+            : 'Producto desactivado correctamente.'
+        );
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error al eliminar producto:',
+          error
+        );
+
+        this.deletingProductId.set(null);
+
+        this.error.set(
+          error?.error?.detail ||
+          error?.error?.message ||
+          'No se pudo eliminar el producto.'
+        );
+
+      }
+
+    });
+  }
+
+  // ============================================
+  // STOCK TOTAL
+  // ============================================
+
   getTotalStock(): number {
 
     return this.products().reduce(
@@ -138,4 +237,5 @@ export class Dashboard implements OnInit {
       0
     );
   }
+
 }
