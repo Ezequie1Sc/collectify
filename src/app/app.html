@@ -1,23 +1,85 @@
-<h1>Collectify</h1>
+<div class="app-shell">
+  <header class="topbar">
+    <div>
+      <h1>{{ title() }}</h1>
+      <p>Gestión de inventario y ventas</p>
+    </div>
+  </header>
 
-@if (error()) {
-  <p>{{ error() }}</p>
-}
+  <main class="dashboard">
+    <section class="dashboard-header">
+      <div>
+        <span class="eyebrow">INVENTARIO</span>
+        <h2>Productos</h2>
+        <p>Administra tus productos y consulta su disponibilidad.</p>
+      </div>
 
-@if (products().length === 0 && !error()) {
-  <p>Cargando productos...</p>
-}
+      <div class="product-count">
+        <strong>{{ products().length }}</strong>
+        <span>Productos</span>
+      </div>
+    </section>
 
-@for (product of products(); track product.id) {
-  <article>
-    <h2>{{ product.name }}</h2>
+    @if (loading()) {
+      <section class="state">
+        <p>Cargando productos...</p>
+      </section>
+    } @else if (error()) {
+      <section class="state error">
+        <p>{{ error() }}</p>
+      </section>
+    } @else if (products().length === 0) {
+      <section class="state">
+        <p>No hay productos registrados.</p>
+      </section>
+    } @else {
+      <section class="products-grid">
+        @for (product of products(); track product.id) {
+          <article class="product-card">
+            <div class="product-card-header">
+              <span class="category">
+                {{ product.category || 'Sin categoría' }}
+              </span>
 
-    <p>{{ product.description }}</p>
+              @if (product.stock > 0) {
+                <span class="stock available">
+                  {{ product.stock }} disponibles
+                </span>
+              } @else {
+                <span class="stock unavailable">
+                  Sin stock
+                </span>
+              }
+            </div>
 
-    <p>Precio: ${{ product.price }}</p>
+            <div class="product-info">
+              <h3>{{ product.name }}</h3>
 
-    <p>Stock: {{ product.stock }}</p>
+              @if (product.description) {
+                <p>{{ product.description }}</p>
+              }
 
-    <p>SKU: {{ product.sku }}</p>
-  </article>
-}
+              @if (product.sku) {
+                <span class="sku">SKU: {{ product.sku }}</span>
+              }
+            </div>
+
+            <div class="product-footer">
+              <div>
+                <span class="price-label">Precio</span>
+                <strong>${{ product.price }}</strong>
+              </div>
+
+              <div>
+                <span class="price-label">Costo</span>
+                <strong>${{ product.cost || 0 }}</strong>
+              </div>
+            </div>
+          </article>
+        }
+      </section>
+    }
+  </main>
+</div>
+
+<router-outlet />
