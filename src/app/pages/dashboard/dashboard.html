@@ -2,51 +2,174 @@
 
 <main class="dashboard">
 
+  <!-- HERO -->
   <section class="dashboard__hero">
-    <div>
+
+    <div class="dashboard__hero-content">
+
       <span class="dashboard__eyebrow">
-        INVENTARIO
+        COLLECTIFY
       </span>
 
-      <h1>Productos</h1>
+      <h1>
+        Tu inventario,
+        <span> bajo control.</span>
+      </h1>
 
       <p>
-        Administra tus productos y consulta su disponibilidad.
+        Administra tus productos, controla existencias
+        y mantén organizada tu colección.
       </p>
+
     </div>
 
-    <div class="dashboard__counter">
-      <strong>{{ products().length }}</strong>
-      <span>Productos</span>
+    <div class="dashboard__stats">
+
+      <div class="stat-card">
+        <span class="stat-card__label">
+          PRODUCTOS
+        </span>
+
+        <strong>
+          {{ products().length }}
+        </strong>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-card__label">
+          STOCK TOTAL
+        </span>
+
+        <strong>
+          {{ getTotalStock() }}
+        </strong>
+      </div>
+
     </div>
+
   </section>
 
-  @if (loading()) {
 
-    <p>Cargando productos...</p>
+  <!-- INVENTARIO -->
+  <section class="dashboard__inventory">
 
-  } @else if (error()) {
+    <div class="section-header">
 
-    <p>{{ error() }}</p>
+      <div>
+        <span class="section-header__eyebrow">
+          INVENTARIO
+        </span>
 
-  } @else if (products().length === 0) {
+        <h2>
+          Tus productos
+        </h2>
 
-    <app-empty-state />
+        <p>
+          Consulta y administra los productos registrados.
+        </p>
+      </div>
 
-  } @else {
+      <button
+        type="button"
+        class="section-header__refresh"
+        (click)="loadProducts()"
+        [disabled]="loading()"
+      >
+        Actualizar
+      </button>
 
-    <section class="dashboard__products">
+    </div>
 
-      @for (product of products(); track product.id) {
 
-        <app-product-card
-          [product]="product"
-        />
+    <!-- LOADING -->
+    @if (loading()) {
 
-      }
+      <div class="state-message">
+        <div class="loader"></div>
 
-    </section>
+        <p>
+          Cargando productos...
+        </p>
+      </div>
 
-  }
+    }
+
+    <!-- ERROR -->
+    @else if (error()) {
+
+      <div class="state-message state-message--error">
+
+        <h3>
+          No pudimos cargar el inventario
+        </h3>
+
+        <p>
+          {{ error() }}
+        </p>
+
+        <button
+          type="button"
+          (click)="loadProducts()"
+        >
+          Intentar nuevamente
+        </button>
+
+      </div>
+
+    }
+
+    <!-- EMPTY -->
+    @else if (products().length === 0) {
+
+      <app-empty-state />
+
+    }
+
+    <!-- PRODUCTS -->
+    @else {
+
+      <div class="products-grid">
+
+        @for (product of products(); track product.id) {
+
+          <app-product-card
+            [product]="product"
+          />
+
+        }
+
+      </div>
+
+    }
+
+  </section>
+
+
+  <!-- NUEVO PRODUCTO -->
+  <section class="dashboard__create">
+
+    <div class="section-header">
+
+      <div>
+        <span class="section-header__eyebrow">
+          GESTIÓN
+        </span>
+
+        <h2>
+          Agregar producto
+        </h2>
+
+        <p>
+          Registra un nuevo producto en tu inventario.
+        </p>
+      </div>
+
+    </div>
+
+    <app-product-form
+      (productCreated)="loadProducts()"
+    />
+
+  </section>
 
 </main>
