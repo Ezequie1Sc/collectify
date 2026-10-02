@@ -1,0 +1,280 @@
+<main class="partners">
+
+  <!-- =====================================================
+       HEADER
+  ====================================================== -->
+
+  <header class="partners__header">
+
+    <div>
+
+      <span class="eyebrow">
+        COLLECTIFY
+      </span>
+
+      <h1>
+        Socios
+      </h1>
+
+      <p>
+        Administra las personas que aportan productos
+        al inventario.
+      </p>
+
+    </div>
+
+
+    <div class="partners__count">
+
+      <span>
+        SOCIOS
+      </span>
+
+      <strong>
+        {{ partners().length }}
+      </strong>
+
+    </div>
+
+  </header>
+
+
+  <!-- =====================================================
+       ALERTAS
+  ====================================================== -->
+
+  @if (success()) {
+
+    <div class="message message--success">
+
+      {{ success() }}
+
+    </div>
+
+  }
+
+
+  @if (error()) {
+
+    <div class="message message--error">
+
+      {{ error() }}
+
+    </div>
+
+  }
+
+
+  <!-- =====================================================
+       CONTENIDO
+  ====================================================== -->
+
+  <section class="partners__layout">
+
+
+    <!-- ===================================================
+         FORMULARIO
+    ==================================================== -->
+
+    <article class="partner-form">
+
+      <div class="section-heading">
+
+        <span class="eyebrow">
+          NUEVO SOCIO
+        </span>
+
+        <h2>
+          Registrar socio
+        </h2>
+
+        <p>
+          Agrega a una persona para poder asociar
+          sus productos al inventario.
+        </p>
+
+      </div>
+
+
+      <form
+        (ngSubmit)="createPartner()"
+      >
+
+        <div class="field">
+
+          <label for="name">
+            Nombre
+          </label>
+
+          <input
+            id="name"
+            type="text"
+            name="name"
+            [(ngModel)]="name"
+            placeholder="Ej. Carlos Pérez"
+            autocomplete="name"
+          />
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="email">
+            Correo electrónico
+            <span>
+              Opcional
+            </span>
+          </label>
+
+          <input
+            id="email"
+            type="email"
+            name="email"
+            [(ngModel)]="email"
+            placeholder="correo@ejemplo.com"
+            autocomplete="email"
+          />
+
+        </div>
+
+
+        <button
+          type="submit"
+          class="primary-button"
+          [disabled]="saving()"
+        >
+
+          {{ saving()
+            ? 'Guardando...'
+            : 'Registrar socio'
+          }}
+
+        </button>
+
+      </form>
+
+    </article>
+
+
+    <!-- ===================================================
+         LISTADO
+    ==================================================== -->
+
+    <article class="partners-list">
+
+      <div class="section-heading">
+
+        <span class="eyebrow">
+          EQUIPO
+        </span>
+
+        <h2>
+          Socios registrados
+        </h2>
+
+        <p>
+          Personas que pueden tener productos
+          dentro del inventario.
+        </p>
+
+      </div>
+
+
+      @if (loading()) {
+
+        <div class="empty-message">
+
+          <p>
+            Cargando socios...
+          </p>
+
+        </div>
+
+      }
+
+      @else if (partners().length === 0) {
+
+        <div class="empty-message">
+
+          <div class="empty-icon">
+            +
+          </div>
+
+          <h3>
+            No hay socios registrados
+          </h3>
+
+          <p>
+            Registra el primer socio para comenzar
+            a organizar el inventario.
+          </p>
+
+        </div>
+
+      }
+
+      @else {
+
+        <div class="partner-items">
+
+          @for (
+            partner of partners();
+            track partner.id
+          ) {
+
+            <div class="partner-card">
+
+              <div class="partner-card__identity">
+
+                <div class="partner-avatar">
+
+                  {{ partner.name.charAt(0).toUpperCase() }}
+
+                </div>
+
+
+                <div>
+
+                  <h3>
+                    {{ partner.name }}
+                  </h3>
+
+                  @if (partner.email) {
+
+                    <p>
+                      {{ partner.email }}
+                    </p>
+
+                  }
+
+                  <span class="status">
+                    Activo
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <button
+                type="button"
+                class="delete-button"
+                (click)="deletePartner(partner)"
+              >
+                Eliminar
+              </button>
+
+            </div>
+
+          }
+
+        </div>
+
+      }
+
+    </article>
+
+  </section>
+
+</main>
