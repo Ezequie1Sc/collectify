@@ -1,20 +1,19 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-export interface Product {
-  id: string;
+import { Product } from '../models/product';
+
+export interface ProductCreate {
   owner_id: string;
   name: string;
-  description: string | null;
-  category: string | null;
-  sku: string | null;
+  description?: string | null;
+  category?: string | null;
+  sku?: string | null;
   price: number;
-  cost: number | null;
+  cost?: number | null;
   stock: number;
-  image_url: string | null;
-  created_at: string;
-  updated_at: string;
+  image_url?: string | null;
 }
 
 export interface ProductsResponse {
@@ -22,9 +21,10 @@ export interface ProductsResponse {
 }
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class ApiService {
+
   private readonly baseUrl = 'http://127.0.0.1:8000';
 
   constructor(private readonly http: HttpClient) {}
@@ -32,6 +32,13 @@ export class ApiService {
   getProducts(ownerId: string): Observable<ProductsResponse> {
     return this.http.get<ProductsResponse>(
       `${this.baseUrl}/products/${ownerId}`
+    );
+  }
+
+  createProduct(product: ProductCreate): Observable<ProductsResponse> {
+    return this.http.post<ProductsResponse>(
+      `${this.baseUrl}/products`,
+      product
     );
   }
 }
