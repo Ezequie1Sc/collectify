@@ -7,78 +7,316 @@
   </header>
 
   <main class="dashboard">
+
+    <!-- Encabezado del inventario -->
     <section class="dashboard-header">
       <div>
         <span class="eyebrow">INVENTARIO</span>
         <h2>Productos</h2>
-        <p>Administra tus productos y consulta su disponibilidad.</p>
+        <p>
+          Administra tus productos y consulta su disponibilidad.
+        </p>
       </div>
 
-      <div class="product-count">
-        <strong>{{ products().length }}</strong>
-        <span>Productos</span>
+      <div class="dashboard-actions">
+        <div class="product-count">
+          <strong>{{ products().length }}</strong>
+          <span>Productos</span>
+        </div>
+
+        <button
+          type="button"
+          class="primary-button"
+          (click)="openProductForm()"
+        >
+          + Nuevo producto
+        </button>
       </div>
     </section>
 
+    <!-- Formulario de nuevo producto -->
+    @if (showProductForm()) {
+      <section class="product-form-container">
+
+        <div class="form-header">
+          <div>
+            <span class="eyebrow">INVENTARIO</span>
+            <h2>Nuevo producto</h2>
+            <p>
+              Agrega un nuevo producto a tu inventario.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="close-button"
+            (click)="closeProductForm()"
+            [disabled]="creatingProduct()"
+            aria-label="Cerrar formulario"
+          >
+            ×
+          </button>
+        </div>
+
+        <form
+          class="product-form"
+          (submit)="createProduct($event)"
+        >
+
+          <div class="form-grid">
+
+            <!-- Nombre -->
+            <label>
+              Nombre
+
+              <input
+                type="text"
+                name="name"
+                placeholder="Ej. Funko Batman"
+                required
+              />
+            </label>
+
+            <!-- Categoría -->
+            <label>
+              Categoría
+
+              <input
+                type="text"
+                name="category"
+                placeholder="Ej. Funko"
+              />
+            </label>
+
+            <!-- SKU -->
+            <label>
+              SKU
+
+              <input
+                type="text"
+                name="sku"
+                placeholder="Ej. FK-BAT-001"
+              />
+            </label>
+
+            <!-- Precio -->
+            <label>
+              Precio
+
+              <input
+                type="number"
+                name="price"
+                min="0.01"
+                step="0.01"
+                placeholder="500"
+                required
+              />
+            </label>
+
+            <!-- Costo -->
+            <label>
+              Costo
+
+              <input
+                type="number"
+                name="cost"
+                min="0"
+                step="0.01"
+                placeholder="300"
+              />
+            </label>
+
+            <!-- Stock -->
+            <label>
+              Stock
+
+              <input
+                type="number"
+                name="stock"
+                min="0"
+                step="1"
+                placeholder="10"
+                required
+              />
+            </label>
+
+          </div>
+
+          <!-- Descripción -->
+          <label>
+            Descripción
+
+            <textarea
+              name="description"
+              rows="3"
+              placeholder="Describe el producto..."
+            ></textarea>
+          </label>
+
+          <!-- Error -->
+          @if (formError()) {
+            <p class="form-error">
+              {{ formError() }}
+            </p>
+          }
+
+          <!-- Acciones -->
+          <div class="form-actions">
+
+            <button
+              type="button"
+              class="secondary-button"
+              (click)="closeProductForm()"
+              [disabled]="creatingProduct()"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              class="primary-button"
+              [disabled]="creatingProduct()"
+            >
+              @if (creatingProduct()) {
+                Guardando...
+              } @else {
+                Guardar producto
+              }
+            </button>
+
+          </div>
+
+        </form>
+      </section>
+    }
+
+    <!-- Estado de carga -->
     @if (loading()) {
+
       <section class="state">
         <p>Cargando productos...</p>
       </section>
-    } @else if (error()) {
+
+    }
+
+    <!-- Error al cargar productos -->
+    @else if (error()) {
+
       <section class="state error">
         <p>{{ error() }}</p>
       </section>
-    } @else if (products().length === 0) {
+
+    }
+
+    <!-- Sin productos -->
+    @else if (products().length === 0) {
+
       <section class="state">
         <p>No hay productos registrados.</p>
+
+        <button
+          type="button"
+          class="primary-button"
+          (click)="openProductForm()"
+        >
+          Crear primer producto
+        </button>
       </section>
-    } @else {
+
+    }
+
+    <!-- Lista de productos -->
+    @else {
+
       <section class="products-grid">
+
         @for (product of products(); track product.id) {
+
           <article class="product-card">
+
+            <!-- Encabezado de tarjeta -->
             <div class="product-card-header">
-              <span class="category">
-                {{ product.category || 'Sin categoría' }}
-              </span>
+
+              @if (product.category) {
+                <span class="category">
+                  {{ product.category }}
+                </span>
+              } @else {
+                <span class="category">
+                  Sin categoría
+                </span>
+              }
 
               @if (product.stock > 0) {
+
                 <span class="stock available">
                   {{ product.stock }} disponibles
                 </span>
+
               } @else {
+
                 <span class="stock unavailable">
                   Sin stock
                 </span>
+
               }
+
             </div>
 
+            <!-- Información -->
             <div class="product-info">
-              <h3>{{ product.name }}</h3>
+
+              <h3>
+                {{ product.name }}
+              </h3>
 
               @if (product.description) {
-                <p>{{ product.description }}</p>
+                <p>
+                  {{ product.description }}
+                </p>
               }
 
               @if (product.sku) {
-                <span class="sku">SKU: {{ product.sku }}</span>
+                <span class="sku">
+                  SKU: {{ product.sku }}
+                </span>
               }
+
             </div>
 
+            <!-- Precio y costo -->
             <div class="product-footer">
+
               <div>
-                <span class="price-label">Precio</span>
-                <strong>${{ product.price }}</strong>
+                <span class="price-label">
+                  Precio
+                </span>
+
+                <strong>
+                  ${{ product.price }}
+                </strong>
               </div>
 
               <div>
-                <span class="price-label">Costo</span>
-                <strong>${{ product.cost || 0 }}</strong>
+                <span class="price-label">
+                  Costo
+                </span>
+
+                <strong>
+                  ${{ product.cost || 0 }}
+                </strong>
               </div>
+
             </div>
+
           </article>
+
         }
+
       </section>
+
     }
+
   </main>
 </div>
 
