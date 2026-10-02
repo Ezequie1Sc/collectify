@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-import { Api, Product } from './core/services/api';
+import { ApiService, Product } from './core/services/api';
 
 @Component({
   imports: [RouterOutlet],
@@ -10,24 +10,33 @@ import { Api, Product } from './core/services/api';
   templateUrl: './app.html',
 })
 export class App implements OnInit {
-  protected readonly title = signal('collectify');
+  protected readonly title = signal('Collectify');
+  protected readonly products = signal<Product[]>([]);
+  protected readonly loading = signal(true);
+  protected readonly error = signal<string | null>(null);
 
-  protected products = signal<Product[]>([]);
-  protected error = signal<string | null>(null);
+  private readonly api = inject(ApiService);
 
-  private readonly api = inject(Api);
+  private readonly ownerId =
+    '7c29ed96-5076-402b-a748-0d288ed95298';
 
   ngOnInit(): void {
-    const ownerId = '7c29ed96-5076-402b-a748-0d288ed95298';
+    this.loadProducts();
+  }
 
-    this.api.getProducts(ownerId).subscribe({
+  private loadProducts(): void {
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.api.getProducts(this.ownerId).subscribe({
       next: (response) => {
-        console.log('Productos recibidos:', response.data);
         this.products.set(response.data);
+        this.loading.set(false);
       },
-      error: (error) => {
-        console.error('Error al obtener productos:', error);
+      error: (error: unknown) => {
+        console.error('Error al cargar productos:', error);
         this.error.set('No se pudieron cargar los productos.');
+        this.loading.set(false);
       },
     });
   }
