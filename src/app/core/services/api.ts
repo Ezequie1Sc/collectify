@@ -17,21 +17,21 @@ export interface Product {
   updated_at: string;
 }
 
-interface ProductsResponse {
+export interface ProductsResponse {
   data: Product[];
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-export class Api {
+export class ApiService {
   private readonly http = inject(HttpClient);
 
   private readonly apiUrl = 'http://127.0.0.1:8000';
 
   getProducts(ownerId: string): Observable<ProductsResponse> {
     return this.http.get<ProductsResponse>(
-      `${this.apiUrl}/products/${ownerId}`
+      `${this.apiUrl}/products/${ownerId}`,
     );
   }
 }
