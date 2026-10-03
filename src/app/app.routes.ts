@@ -8,6 +8,10 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
 
+  // =========================================================
+  // DASHBOARD
+  // =========================================================
+
   {
     path: 'dashboard',
     loadComponent: () =>
@@ -16,6 +20,10 @@ export const routes: Routes = [
           (m) => m.Dashboard
         ),
   },
+
+  // =========================================================
+  // SALES
+  // =========================================================
 
   {
     path: 'sales',
@@ -26,12 +34,29 @@ export const routes: Routes = [
         ),
   },
 
+  // =========================================================
+  // PARTNERS
+  // =========================================================
+
   {
     path: 'partners',
     loadComponent: () =>
       import('./pages/partners/partners')
         .then(
           (m) => m.Partners
+        ),
+  },
+
+  // =========================================================
+  // EARNINGS
+  // =========================================================
+
+  {
+    path: 'earnings',
+    loadComponent: () =>
+      import('./pages/earnings/earnings')
+        .then(
+          (m) => m.Earnings
         ),
   },
 
