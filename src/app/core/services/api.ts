@@ -32,6 +32,10 @@ import {
   PartnerResponse
 } from '../models/partner';
 
+import {
+  EarningsResponse
+} from '../models/earnings';
+
 
 @Injectable({
   providedIn: 'root'
@@ -210,6 +214,22 @@ export class ApiService {
       data: Partner;
     }>(
       `${this.baseUrl}/partners/${partnerId}`
+    );
+  }
+
+
+  // =========================================================
+  // EARNINGS
+  // =========================================================
+
+  /**
+   * Obtiene el resumen general de ganancias
+   * y el desglose de ganancias por socio.
+   */
+  getEarnings(): Observable<EarningsResponse> {
+
+    return this.http.get<EarningsResponse>(
+      `${this.baseUrl}/earnings`
     );
   }
 
