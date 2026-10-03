@@ -1,8 +1,261 @@
 <header class="header">
-  <div class="header__content">
-    <div>
-      <h1>Collectify</h1>
-      <p>Gestión de inventario y ventas</p>
+
+  <div class="header__container">
+
+    <!-- =====================================================
+         BRAND
+    ====================================================== -->
+
+    <a
+      routerLink="/dashboard"
+      class="brand"
+      (click)="closeMobileMenu()"
+    >
+
+      <div class="brand__icon">
+        C
+      </div>
+
+      <div class="brand__text">
+
+        <span class="brand__name">
+          Collectify
+        </span>
+
+        <span class="brand__description">
+          Inventario inteligente
+        </span>
+
+      </div>
+
+    </a>
+
+
+    <!-- =====================================================
+         DESKTOP NAVIGATION
+    ====================================================== -->
+
+    <nav
+      class="navigation"
+      aria-label="Navegación principal"
+    >
+
+      <!-- Dashboard -->
+
+      <a
+        routerLink="/dashboard"
+        routerLinkActive="navigation__link--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="navigation__link"
+      >
+
+        <span class="navigation__icon">
+          ⌂
+        </span>
+
+        <span>
+          Dashboard
+        </span>
+
+      </a>
+
+
+      <!-- Ventas -->
+
+      <a
+        routerLink="/sales"
+        routerLinkActive="navigation__link--active"
+        class="navigation__link"
+      >
+
+        <span class="navigation__icon">
+          $
+        </span>
+
+        <span>
+          Ventas
+        </span>
+
+      </a>
+
+
+      <!-- Socios -->
+
+      <a
+        routerLink="/partners"
+        routerLinkActive="navigation__link--active"
+        class="navigation__link"
+      >
+
+        <span class="navigation__icon">
+          ◉
+        </span>
+
+        <span>
+          Socios
+        </span>
+
+      </a>
+
+
+      <!-- Ganancias -->
+
+      <a
+        routerLink="/earnings"
+        routerLinkActive="navigation__link--active"
+        class="navigation__link"
+      >
+
+        <span class="navigation__icon">
+          ↗
+        </span>
+
+        <span>
+          Ganancias
+        </span>
+
+      </a>
+
+
+      <!-- IA -->
+
+      <a
+        routerLink="/ai"
+        routerLinkActive="navigation__link--active"
+        class="navigation__link navigation__link--ai"
+      >
+
+        <span class="navigation__icon">
+          ✦
+        </span>
+
+        <span>
+          Asistente IA
+        </span>
+
+        <span class="navigation__badge">
+          Próximamente
+        </span>
+
+      </a>
+
+    </nav>
+
+
+    <!-- =====================================================
+         RIGHT SIDE
+    ====================================================== -->
+
+    <div class="header__actions">
+
+      <button
+        type="button"
+        class="profile"
+        aria-label="Perfil"
+      >
+
+        <span class="profile__avatar">
+          E
+        </span>
+
+        <span class="profile__name">
+          Ezequiel
+        </span>
+
+        <span class="profile__arrow">
+          ▾
+        </span>
+
+      </button>
+
+
+      <!-- Mobile button -->
+
+      <button
+        type="button"
+        class="menu-button"
+        aria-label="Abrir menú"
+        [attr.aria-expanded]="mobileMenuOpen"
+        (click)="toggleMobileMenu()"
+      >
+
+        <span></span>
+        <span></span>
+        <span></span>
+
+      </button>
+
     </div>
+
   </div>
+
+
+  <!-- =======================================================
+       MOBILE NAVIGATION
+  ======================================================== -->
+
+  <nav
+    class="mobile-navigation"
+    [class.mobile-navigation--open]="mobileMenuOpen"
+    aria-label="Navegación móvil"
+  >
+
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="mobile-navigation__link--active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="mobile-navigation__link"
+      (click)="closeMobileMenu()"
+    >
+      <span>⌂</span>
+      Dashboard
+    </a>
+
+
+    <a
+      routerLink="/sales"
+      routerLinkActive="mobile-navigation__link--active"
+      class="mobile-navigation__link"
+      (click)="closeMobileMenu()"
+    >
+      <span>$</span>
+      Ventas
+    </a>
+
+
+    <a
+      routerLink="/partners"
+      routerLinkActive="mobile-navigation__link--active"
+      class="mobile-navigation__link"
+      (click)="closeMobileMenu()"
+    >
+      <span>◉</span>
+      Socios
+    </a>
+
+
+    <a
+      routerLink="/earnings"
+      routerLinkActive="mobile-navigation__link--active"
+      class="mobile-navigation__link"
+      (click)="closeMobileMenu()"
+    >
+      <span>↗</span>
+      Ganancias
+    </a>
+
+
+    <a
+      routerLink="/ai"
+      routerLinkActive="mobile-navigation__link--active"
+      class="mobile-navigation__link mobile-navigation__link--ai"
+      (click)="closeMobileMenu()"
+    >
+      <span>✦</span>
+      Asistente IA
+      <small>Próximamente</small>
+    </a>
+
+  </nav>
+
 </header>
