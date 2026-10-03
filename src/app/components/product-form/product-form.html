@@ -3,6 +3,10 @@
   class="product-form"
 >
 
+  <!-- =====================================================
+       HEADER
+  ====================================================== -->
+
   <div class="product-form__header">
 
     <span class="eyebrow">
@@ -23,24 +27,99 @@
 
   </div>
 
+
+  <!-- =====================================================
+       MESSAGES
+  ====================================================== -->
+
   @if (success()) {
+
     <div class="message message--success">
       {{ success() }}
     </div>
+
   }
 
   @if (error()) {
+
     <div class="message message--error">
       {{ error() }}
     </div>
+
   }
+
+
+  <!-- =====================================================
+       FORM
+  ====================================================== -->
 
   <form
     class="form"
     (submit)="$event.preventDefault(); saveProduct()"
   >
 
-    <!-- Nombre -->
+    <!-- ===================================================
+         SOCIO
+    ==================================================== -->
+
+    <div class="form__field">
+
+      <label for="owner_id">
+        Socio
+      </label>
+
+      <select
+        id="owner_id"
+        name="owner_id"
+        [(ngModel)]="product.owner_id"
+        [disabled]="isEditing || loadingPartners()"
+        required
+      >
+
+        <option
+          value=""
+          disabled
+        >
+          {{
+            loadingPartners()
+              ? 'Cargando socios...'
+              : 'Selecciona un socio'
+          }}
+        </option>
+
+        @for (partner of partners(); track partner.id) {
+
+          <option
+            [value]="partner.id"
+          >
+            {{ partner.name }}
+          </option>
+
+        }
+
+      </select>
+
+      @if (isEditing) {
+
+        <span class="form__help">
+          El socio no puede cambiarse durante la edición.
+        </span>
+
+      } @else if (!loadingPartners() && partners().length === 0) {
+
+        <span class="form__help form__help--error">
+          No hay socios registrados. Registra un socio antes
+          de crear un producto.
+        </span>
+
+      }
+
+    </div>
+
+
+    <!-- ===================================================
+         NOMBRE
+    ==================================================== -->
 
     <div class="form__field">
 
@@ -60,7 +139,9 @@
     </div>
 
 
-    <!-- Descripción -->
+    <!-- ===================================================
+         DESCRIPCIÓN
+    ==================================================== -->
 
     <div class="form__field">
 
@@ -79,7 +160,9 @@
     </div>
 
 
-    <!-- Categoría / SKU -->
+    <!-- ===================================================
+         CATEGORÍA / SKU
+    ==================================================== -->
 
     <div class="form__row">
 
@@ -119,7 +202,9 @@
     </div>
 
 
-    <!-- Precio / Costo -->
+    <!-- ===================================================
+         PRECIO / COSTO
+    ==================================================== -->
 
     <div class="form__row">
 
@@ -164,7 +249,9 @@
     </div>
 
 
-    <!-- Stock -->
+    <!-- ===================================================
+         STOCK
+    ==================================================== -->
 
     <div class="form__field">
 
@@ -185,7 +272,9 @@
     </div>
 
 
-    <!-- Imagen -->
+    <!-- ===================================================
+         IMAGEN
+    ==================================================== -->
 
     <div class="form__field">
 
@@ -204,14 +293,20 @@
     </div>
 
 
-    <!-- Acciones -->
+    <!-- ===================================================
+         ACTIONS
+    ==================================================== -->
 
     <div class="form__actions">
 
       <button
         type="submit"
         class="form__submit"
-        [disabled]="loading()"
+        [disabled]="
+          loading() ||
+          loadingPartners() ||
+          (!isEditing && !product.owner_id)
+        "
       >
 
         @if (loading()) {
