@@ -45,6 +45,11 @@ export class ApiService {
   private readonly http =
     inject(HttpClient);
 
+
+  // =========================================================
+  // BASE URL
+  // =========================================================
+
   private readonly baseUrl =
     'http://127.0.0.1:8000';
 
@@ -54,17 +59,21 @@ export class ApiService {
   // =========================================================
 
   /**
-   * Obtiene TODOS los productos activos.
+   * Obtiene todos los productos activos.
    *
-   * El Dashboard utiliza este método
-   * porque el inventario es compartido
-   * entre todos los socios.
+   * El inventario es compartido entre
+   * todos los socios.
    */
   getProducts(): Observable<ProductsResponse> {
+
+    console.log(
+      '[API] GET /products'
+    );
 
     return this.http.get<ProductsResponse>(
       `${this.baseUrl}/products`
     );
+
   }
 
 
@@ -75,9 +84,15 @@ export class ApiService {
     ownerId: string
   ): Observable<ProductsResponse> {
 
+    console.log(
+      '[API] GET /products/',
+      ownerId
+    );
+
     return this.http.get<ProductsResponse>(
       `${this.baseUrl}/products/${ownerId}`
     );
+
   }
 
 
@@ -89,10 +104,16 @@ export class ApiService {
     product: ProductCreate
   ): Observable<ProductResponse> {
 
+    console.log(
+      '[API] POST /products',
+      product
+    );
+
     return this.http.post<ProductResponse>(
       `${this.baseUrl}/products`,
       product
     );
+
   }
 
 
@@ -105,10 +126,17 @@ export class ApiService {
     product: ProductUpdate
   ): Observable<ProductResponse> {
 
+    console.log(
+      '[API] PATCH /products/',
+      productId,
+      product
+    );
+
     return this.http.patch<ProductResponse>(
       `${this.baseUrl}/products/${productId}`,
       product
     );
+
   }
 
 
@@ -125,6 +153,11 @@ export class ApiService {
     data: Product;
   }> {
 
+    console.log(
+      '[API] DELETE /products/',
+      productId
+    );
+
     return this.http.delete<{
       message: string;
       deleted: boolean;
@@ -133,6 +166,7 @@ export class ApiService {
     }>(
       `${this.baseUrl}/products/${productId}`
     );
+
   }
 
 
@@ -140,14 +174,38 @@ export class ApiService {
   // SALES
   // =========================================================
 
+  /**
+   * Registra una nueva venta.
+   *
+   * El backend:
+   *
+   * - valida el socio
+   * - valida los productos
+   * - valida el stock
+   * - calcula el total
+   * - registra la venta
+   * - registra los productos vendidos
+   * - actualiza el stock
+   * - genera el ticket
+   */
   createSale(
     sale: SaleCreate
   ): Observable<SaleResponse> {
+
+    console.log(
+      '[API] POST /sales'
+    );
+
+    console.log(
+      '[API] Venta enviada:',
+      sale
+    );
 
     return this.http.post<SaleResponse>(
       `${this.baseUrl}/sales`,
       sale
     );
+
   }
 
 
@@ -155,11 +213,19 @@ export class ApiService {
   // PARTNERS
   // =========================================================
 
+  /**
+   * Obtiene todos los socios.
+   */
   getPartners(): Observable<PartnersResponse> {
+
+    console.log(
+      '[API] GET /partners'
+    );
 
     return this.http.get<PartnersResponse>(
       `${this.baseUrl}/partners`
     );
+
   }
 
 
@@ -171,10 +237,16 @@ export class ApiService {
     partner: PartnerCreate
   ): Observable<PartnerResponse> {
 
+    console.log(
+      '[API] POST /partners',
+      partner
+    );
+
     return this.http.post<PartnerResponse>(
       `${this.baseUrl}/partners`,
       partner
     );
+
   }
 
 
@@ -187,10 +259,17 @@ export class ApiService {
     partner: PartnerUpdate
   ): Observable<PartnerResponse> {
 
+    console.log(
+      '[API] PATCH /partners/',
+      partnerId,
+      partner
+    );
+
     return this.http.patch<PartnerResponse>(
       `${this.baseUrl}/partners/${partnerId}`,
       partner
     );
+
   }
 
 
@@ -207,6 +286,11 @@ export class ApiService {
     data: Partner;
   }> {
 
+    console.log(
+      '[API] DELETE /partners/',
+      partnerId
+    );
+
     return this.http.delete<{
       message: string;
       deleted: boolean;
@@ -215,6 +299,7 @@ export class ApiService {
     }>(
       `${this.baseUrl}/partners/${partnerId}`
     );
+
   }
 
 
@@ -223,14 +308,34 @@ export class ApiService {
   // =========================================================
 
   /**
-   * Obtiene el resumen general de ganancias
-   * y el desglose de ganancias por socio.
+   * Obtiene:
+   *
+   * - ventas totales
+   * - costos totales
+   * - ganancias totales
+   * - número de transacciones
+   * - productos vendidos
+   * - ganancias por socio
+   * - información del cálculo
    */
   getEarnings(): Observable<EarningsResponse> {
 
-    return this.http.get<EarningsResponse>(
-      `${this.baseUrl}/earnings`
+    console.log(
+      '[API] GET /earnings'
     );
+
+    const url =
+      `${this.baseUrl}/earnings`;
+
+    console.log(
+      '[API] URL:',
+      url
+    );
+
+    return this.http.get<EarningsResponse>(
+      url
+    );
+
   }
 
 }
