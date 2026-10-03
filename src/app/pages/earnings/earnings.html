@@ -1,0 +1,582 @@
+<div class="earnings-page">
+
+  <!-- =====================================================
+       HEADER
+  ====================================================== -->
+
+  <header class="page-header">
+
+    <div>
+      <span class="eyebrow">
+        COLLECTIFY
+      </span>
+
+      <h1>
+        Ganancias
+      </h1>
+
+      <p>
+        Consulta el rendimiento general de tus ventas
+        y el desglose de ganancias por socio.
+      </p>
+    </div>
+
+
+    <button
+      type="button"
+      class="refresh-button"
+      (click)="refresh()"
+      [disabled]="loading"
+    >
+      <span
+        class="refresh-icon"
+        [class.spinning]="loading"
+      >
+        ↻
+      </span>
+
+      Actualizar
+    </button>
+
+  </header>
+
+
+  <!-- =====================================================
+       LOADING
+  ====================================================== -->
+
+  @if (loading) {
+
+    <section class="loading-state">
+
+      <div class="loading-spinner"></div>
+
+      <p>
+        Cargando información de ganancias...
+      </p>
+
+    </section>
+
+  }
+
+
+  <!-- =====================================================
+       ERROR
+  ====================================================== -->
+
+  @if (!loading && error) {
+
+    <section class="error-state">
+
+      <div class="error-icon">
+        !
+      </div>
+
+      <div>
+        <strong>
+          No se pudo cargar la información
+        </strong>
+
+        <p>
+          {{ error }}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="retry-button"
+        (click)="refresh()"
+      >
+        Reintentar
+      </button>
+
+    </section>
+
+  }
+
+
+  @if (!loading && !error && earnings) {
+
+    <!-- =================================================
+         GENERAL SUMMARY
+    ================================================== -->
+
+    <section class="summary-section">
+
+      <div class="section-heading">
+
+        <div>
+          <span class="section-label">
+            RESUMEN GENERAL
+          </span>
+
+          <h2>
+            Rendimiento de Collectify
+          </h2>
+        </div>
+
+        <span class="estimate-badge">
+          Datos actuales
+        </span>
+
+      </div>
+
+
+      <div class="summary-grid">
+
+        <!-- TOTAL SALES -->
+
+        <article class="summary-card">
+
+          <div class="card-top">
+
+            <span class="card-label">
+              Ventas totales
+            </span>
+
+            <span class="card-icon sales-icon">
+              $
+            </span>
+
+          </div>
+
+          <strong class="card-value">
+            {{ formatCurrency(summary?.total_sales ?? 0) }}
+          </strong>
+
+          <span class="card-description">
+            Ingresos generados
+          </span>
+
+        </article>
+
+
+        <!-- COST -->
+
+        <article class="summary-card">
+
+          <div class="card-top">
+
+            <span class="card-label">
+              Costo total
+            </span>
+
+            <span class="card-icon cost-icon">
+              ↓
+            </span>
+
+          </div>
+
+          <strong class="card-value">
+            {{ formatCurrency(summary?.total_cost ?? 0) }}
+          </strong>
+
+          <span class="card-description">
+            Costo de productos vendidos
+          </span>
+
+        </article>
+
+
+        <!-- PROFIT -->
+
+        <article class="summary-card profit-card">
+
+          <div class="card-top">
+
+            <span class="card-label">
+              Ganancia total
+            </span>
+
+            <span class="card-icon profit-icon">
+              ↗
+            </span>
+
+          </div>
+
+          <strong class="card-value profit-value">
+            {{ formatCurrency(summary?.total_profit ?? 0) }}
+          </strong>
+
+          <span class="card-description">
+            Ganancia generada
+          </span>
+
+        </article>
+
+
+        <!-- TRANSACTIONS -->
+
+        <article class="summary-card">
+
+          <div class="card-top">
+
+            <span class="card-label">
+              Transacciones
+            </span>
+
+            <span class="card-icon transaction-icon">
+              #
+            </span>
+
+          </div>
+
+          <strong class="card-value">
+            {{ summary?.total_transactions ?? 0 }}
+          </strong>
+
+          <span class="card-description">
+            Ventas registradas
+          </span>
+
+        </article>
+
+
+      </div>
+
+
+      <!-- SECONDARY METRICS -->
+
+      <div class="secondary-summary">
+
+        <div class="secondary-item">
+
+          <span>
+            Productos vendidos
+          </span>
+
+          <strong>
+            {{ summary?.total_items_sold ?? 0 }}
+          </strong>
+
+        </div>
+
+
+        <div class="secondary-divider"></div>
+
+
+        <div class="secondary-item">
+
+          <span>
+            Margen general
+          </span>
+
+          <strong>
+            {{
+              getProfitMargin(
+                summary?.total_sales ?? 0,
+                summary?.total_profit ?? 0
+              ) | number:'1.0-1'
+            }}%
+          </strong>
+
+        </div>
+
+
+        <div class="secondary-divider"></div>
+
+
+        <div class="secondary-item">
+
+          <span>
+            Ganancia promedio por venta
+          </span>
+
+          <strong>
+            {{
+              formatCurrency(
+                (summary?.total_transactions ?? 0) > 0
+                  ? (summary?.total_profit ?? 0) /
+                    (summary?.total_transactions ?? 1)
+                  : 0
+              )
+            }}
+          </strong>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =================================================
+         PARTNERS
+    ================================================== -->
+
+    <section class="partners-section">
+
+      <div class="section-heading">
+
+        <div>
+
+          <span class="section-label">
+            SOCIOS
+          </span>
+
+          <h2>
+            Ganancias por socio
+          </h2>
+
+          <p>
+            Desglose de las ventas y ganancias generadas
+            por cada socio.
+          </p>
+
+        </div>
+
+        <span class="partner-count">
+          {{ activePartners.length }}
+          {{ activePartners.length === 1 ? 'socio' : 'socios' }}
+        </span>
+
+      </div>
+
+
+      <!-- EMPTY -->
+
+      @if (partners.length === 0) {
+
+        <div class="empty-state">
+
+          <div class="empty-icon">
+            $
+          </div>
+
+          <h3>
+            Sin ganancias registradas
+          </h3>
+
+          <p>
+            Cuando se registren ventas aparecerán
+            aquí los resultados.
+          </p>
+
+        </div>
+
+      }
+
+
+      <!-- PARTNER CARDS -->
+
+      @if (partners.length > 0) {
+
+        <div class="partners-grid">
+
+          @for (
+            partner of partners;
+            track partner.partner_id
+          ) {
+
+            <article class="partner-card">
+
+              <!-- PARTNER HEADER -->
+
+              <div class="partner-header">
+
+                <div class="partner-avatar">
+                  {{ partner.partner_name.charAt(0).toUpperCase() }}
+                </div>
+
+                <div class="partner-info">
+
+                  <h3>
+                    {{ partner.partner_name }}
+                  </h3>
+
+                  @if (partner.email) {
+
+                    <span>
+                      {{ partner.email }}
+                    </span>
+
+                  }
+
+                </div>
+
+
+                <span
+                  class="status"
+                  [class.inactive]="!partner.is_active"
+                >
+                  {{ partner.is_active ? 'Activo' : 'Inactivo' }}
+                </span>
+
+              </div>
+
+
+              <!-- PROFIT -->
+
+              <div class="partner-profit">
+
+                <span>
+                  Ganancia
+                </span>
+
+                <strong>
+                  {{ formatCurrency(partner.profit) }}
+                </strong>
+
+              </div>
+
+
+              <!-- PROFIT PARTICIPATION -->
+
+              <div class="profit-progress">
+
+                <div class="progress-header">
+
+                  <span>
+                    Participación en ganancias
+                  </span>
+
+                  <strong>
+                    {{
+                      getProfitPercentage(partner.profit)
+                        | number:'1.0-1'
+                    }}%
+                  </strong>
+
+                </div>
+
+                <div class="progress-track">
+
+                  <div
+                    class="progress-bar"
+                    [style.width.%]="
+                      getProfitPercentage(partner.profit)
+                    "
+                  ></div>
+
+                </div>
+
+              </div>
+
+
+              <!-- PARTNER METRICS -->
+
+              <div class="partner-metrics">
+
+                <div class="metric">
+
+                  <span>
+                    Ventas
+                  </span>
+
+                  <strong>
+                    {{ formatCurrency(partner.sales) }}
+                  </strong>
+
+                </div>
+
+
+                <div class="metric">
+
+                  <span>
+                    Costo
+                  </span>
+
+                  <strong>
+                    {{ formatCurrency(partner.cost) }}
+                  </strong>
+
+                </div>
+
+
+                <div class="metric">
+
+                  <span>
+                    Productos
+                  </span>
+
+                  <strong>
+                    {{ partner.products_sold }}
+                  </strong>
+
+                </div>
+
+
+                <div class="metric">
+
+                  <span>
+                    Transacciones
+                  </span>
+
+                  <strong>
+                    {{ partner.total_transactions }}
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+              <!-- MARGIN -->
+
+              <div class="partner-footer">
+
+                <span>
+                  Margen de ganancia
+                </span>
+
+                <strong>
+                  {{
+                    getProfitMargin(
+                      partner.sales,
+                      partner.profit
+                    ) | number:'1.0-1'
+                  }}%
+                </strong>
+
+              </div>
+
+            </article>
+
+          }
+
+        </div>
+
+      }
+
+    </section>
+
+
+    <!-- =================================================
+         CALCULATION NOTE
+    ================================================== -->
+
+    <section class="calculation-note">
+
+      <div class="note-icon">
+        i
+      </div>
+
+      <div>
+
+        <strong>
+          Cómo se calculan las ganancias
+        </strong>
+
+        <p>
+          Las ganancias se calculan tomando el precio de venta
+          menos el costo actual registrado del producto.
+          El desglose por socio utiliza el socio asociado
+          directamente con cada venta.
+        </p>
+
+        @if (earnings.calculation.is_estimate) {
+
+          <span class="estimate-text">
+            El costo utilizado actualmente es una estimación
+            basada en el costo vigente del producto.
+          </span>
+
+        }
+
+      </div>
+
+    </section>
+
+  }
+
+</div>
