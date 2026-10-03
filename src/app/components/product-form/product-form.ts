@@ -3,6 +3,7 @@ import {
   EventEmitter,
   Input,
   OnChanges,
+  OnInit,
   Output,
   SimpleChanges,
   inject,
@@ -19,15 +20,25 @@ import {
   ProductUpdate
 } from '../../core/models/product';
 
+import {
+  Partner
+} from '../../core/models/partner';
+
+
 @Component({
   selector: 'app-product-form',
   imports: [FormsModule],
   templateUrl: './product-form.html',
   styleUrl: './product-form.scss'
 })
-export class ProductForm implements OnChanges {
+export class ProductForm implements OnInit, OnChanges {
 
   private readonly api = inject(ApiService);
+
+
+  // =========================================================
+  // INPUTS / OUTPUTS
+  // =========================================================
 
   @Input()
   editingProduct: Product | null = null;
@@ -38,105 +49,300 @@ export class ProductForm implements OnChanges {
   @Output()
   cancelled = new EventEmitter<void>();
 
+
+  // =========================================================
+  // STATE
+  // =========================================================
+
   protected readonly loading = signal(false);
+
+  protected readonly loadingPartners = signal(false);
 
   protected readonly success = signal('');
 
   protected readonly error = signal('');
 
-  protected product: ProductCreate = this.createEmptyProduct();
+  protected readonly partners = signal<Partner[]>([]);
+
+
+  // =========================================================
+  // PRODUCT
+  // =========================================================
+
+  protected product: ProductCreate =
+    this.createEmptyProduct();
+
+
+  // =========================================================
+  // INIT
+  // =========================================================
+
+  ngOnInit(): void {
+
+    this.loadPartners();
+
+  }
+
+
+  // =========================================================
+  // CHANGES
+  // =========================================================
 
   ngOnChanges(changes: SimpleChanges): void {
 
     if (changes['editingProduct']) {
 
-      const product = changes['editingProduct'].currentValue;
+      const product =
+        changes['editingProduct'].currentValue;
 
       if (product) {
+
         this.loadProductForEditing(product);
+
       } else {
+
         this.resetForm();
+
       }
+
     }
+
   }
+
+
+  // =========================================================
+  // GETTERS
+  // =========================================================
 
   protected get isEditing(): boolean {
+
     return this.editingProduct !== null;
+
   }
+
+
+  // =========================================================
+  // CREATE EMPTY PRODUCT
+  // =========================================================
 
   private createEmptyProduct(): ProductCreate {
+
     return {
-      owner_id: '7c29ed96-5076-402b-a748-0d288ed95298',
+
+      owner_id: '',
+
       name: '',
+
       description: '',
+
       category: '',
+
       sku: '',
+
       price: 0,
+
       cost: 0,
+
       stock: 0,
+
       image_url: ''
+
     };
+
   }
 
-  private loadProductForEditing(product: Product): void {
+
+  // =========================================================
+  // LOAD PARTNERS
+  // =========================================================
+
+  private loadPartners(): void {
+
+    this.loadingPartners.set(true);
+
+    this.api.getPartners().subscribe({
+
+      next: (response) => {
+
+        const activePartners =
+          response.data.filter(
+            partner => partner.is_active
+          );
+
+        this.partners.set(activePartners);
+
+        this.loadingPartners.set(false);
+
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error al cargar socios:',
+          error
+        );
+
+        this.loadingPartners.set(false);
+
+        this.error.set(
+          error?.error?.detail ||
+          error?.error?.error ||
+          'No se pudieron cargar los socios.'
+        );
+
+      }
+
+    });
+
+  }
+
+
+  // =========================================================
+  // LOAD PRODUCT FOR EDITING
+  // =========================================================
+
+  private loadProductForEditing(
+    product: Product
+  ): void {
 
     this.success.set('');
+
     this.error.set('');
 
     this.product = {
+
       owner_id: product.owner_id,
+
       name: product.name,
-      description: product.description ?? '',
-      category: product.category ?? '',
-      sku: product.sku ?? '',
+
+      description:
+        product.description ?? '',
+
+      category:
+        product.category ?? '',
+
+      sku:
+        product.sku ?? '',
+
       price: product.price,
-      cost: product.cost ?? 0,
+
+      cost:
+        product.cost ?? 0,
+
       stock: product.stock,
-      image_url: product.image_url ?? ''
+
+      image_url:
+        product.image_url ?? ''
+
     };
+
   }
+
+
+  // =========================================================
+  // SAVE PRODUCT
+  // =========================================================
 
   protected saveProduct(): void {
 
     this.success.set('');
+
     this.error.set('');
 
+
+    // -------------------------------------------------------
+    // OWNER
+    // -------------------------------------------------------
+
+    if (!this.product.owner_id) {
+
+      this.error.set(
+        'Debes seleccionar el socio propietario del producto.'
+      );
+
+      return;
+
+    }
+
+
+    // -------------------------------------------------------
+    // NAME
+    // -------------------------------------------------------
+
     if (!this.product.name.trim()) {
+
       this.error.set(
         'El nombre del producto es obligatorio.'
       );
 
       return;
+
     }
 
+
+    // -------------------------------------------------------
+    // PRICE
+    // -------------------------------------------------------
+
     if (this.product.price <= 0) {
+
       this.error.set(
         'El precio debe ser mayor a 0.'
       );
 
       return;
+
     }
 
+
+    // -------------------------------------------------------
+    // STOCK
+    // -------------------------------------------------------
+
     if (this.product.stock < 0) {
+
       this.error.set(
         'El stock no puede ser negativo.'
       );
 
       return;
+
     }
+
+
+    // -------------------------------------------------------
+    // LOADING
+    // -------------------------------------------------------
 
     this.loading.set(true);
 
+
+    // -------------------------------------------------------
+    // CREATE / UPDATE
+    // -------------------------------------------------------
+
     if (this.editingProduct) {
+
       this.updateProduct();
+
     } else {
+
       this.createProduct();
+
     }
+
   }
+
+
+  // =========================================================
+  // CREATE PRODUCT
+  // =========================================================
 
   private createProduct(): void {
 
-    this.api.createProduct(this.product).subscribe({
+    this.api.createProduct(
+      this.product
+    ).subscribe({
 
       next: () => {
 
@@ -149,6 +355,7 @@ export class ProductForm implements OnChanges {
         this.resetForm();
 
         this.productSaved.emit();
+
       },
 
       error: (error) => {
@@ -165,28 +372,58 @@ export class ProductForm implements OnChanges {
           error?.error?.error ||
           'No se pudo crear el producto.'
         );
+
       }
+
     });
+
   }
+
+
+  // =========================================================
+  // UPDATE PRODUCT
+  // =========================================================
 
   private updateProduct(): void {
 
     if (!this.editingProduct) {
+
       return;
+
     }
 
-    const productId = this.editingProduct.id;
+
+    const productId =
+      this.editingProduct.id;
+
 
     const updateData: ProductUpdate = {
+
       name: this.product.name,
-      description: this.product.description,
-      category: this.product.category,
-      sku: this.product.sku,
-      price: this.product.price,
-      cost: this.product.cost,
-      stock: this.product.stock,
-      image_url: this.product.image_url
+
+      description:
+        this.product.description,
+
+      category:
+        this.product.category,
+
+      sku:
+        this.product.sku,
+
+      price:
+        this.product.price,
+
+      cost:
+        this.product.cost,
+
+      stock:
+        this.product.stock,
+
+      image_url:
+        this.product.image_url
+
     };
+
 
     this.api.updateProduct(
       productId,
@@ -202,6 +439,7 @@ export class ProductForm implements OnChanges {
         );
 
         this.productSaved.emit();
+
       },
 
       error: (error) => {
@@ -218,23 +456,40 @@ export class ProductForm implements OnChanges {
           error?.error?.error ||
           'No se pudo actualizar el producto.'
         );
+
       }
+
     });
+
   }
+
+
+  // =========================================================
+  // CANCEL EDIT
+  // =========================================================
 
   protected cancelEdit(): void {
 
     this.resetForm();
 
     this.cancelled.emit();
+
   }
+
+
+  // =========================================================
+  // RESET FORM
+  // =========================================================
 
   private resetForm(): void {
 
-    this.product = this.createEmptyProduct();
+    this.product =
+      this.createEmptyProduct();
 
     this.success.set('');
 
     this.error.set('');
+
   }
+
 }
