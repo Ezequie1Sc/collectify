@@ -187,44 +187,43 @@ export class Sales implements OnInit {
 
 
   // ============================================
-  // CARGAR PRODUCTOS
-  // ============================================
+// CARGAR PRODUCTOS
+// ============================================
 
-  loadProducts(): void {
+loadProducts(): void {
 
-    this.loading.set(true);
-    this.error.set('');
+  this.loading.set(true);
+  this.error.set('');
 
-    this.api
-      .getProducts(this.ownerId)
-      .subscribe({
+  this.api
+    .getProducts()
+    .subscribe({
 
-        next: (response) => {
+      next: (response) => {
 
-          this.products.set(
-            response.data
-          );
+        this.products.set(
+          response.data
+        );
 
-          this.loading.set(false);
-        },
+        this.loading.set(false);
+      },
 
-        error: (error) => {
+      error: (error) => {
 
-          console.error(
-            'Error al cargar productos:',
-            error
-          );
+        console.error(
+          'Error al cargar productos:',
+          error
+        );
 
-          this.error.set(
-            'No se pudieron cargar los productos.'
-          );
+        this.error.set(
+          'No se pudieron cargar los productos.'
+        );
 
-          this.loading.set(false);
-        }
+        this.loading.set(false);
+      }
 
-      });
-  }
-
+    });
+}
 
   // ============================================
   // BÚSQUEDA
