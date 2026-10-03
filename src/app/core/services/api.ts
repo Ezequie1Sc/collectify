@@ -1,6 +1,15 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import {
+  Injectable,
+  inject
+} from '@angular/core';
+
+import {
+  HttpClient
+} from '@angular/common/http';
+
+import {
+  Observable
+} from 'rxjs';
 
 import {
   Product,
@@ -29,7 +38,8 @@ import {
 })
 export class ApiService {
 
-  private readonly http = inject(HttpClient);
+  private readonly http =
+    inject(HttpClient);
 
   private readonly baseUrl =
     'http://127.0.0.1:8000';
@@ -39,7 +49,25 @@ export class ApiService {
   // PRODUCTS
   // =========================================================
 
-  getProducts(
+  /**
+   * Obtiene TODOS los productos activos.
+   *
+   * El Dashboard utiliza este método
+   * porque el inventario es compartido
+   * entre todos los socios.
+   */
+  getProducts(): Observable<ProductsResponse> {
+
+    return this.http.get<ProductsResponse>(
+      `${this.baseUrl}/products`
+    );
+  }
+
+
+  /**
+   * Obtiene los productos de un socio específico.
+   */
+  getProductsByOwner(
     ownerId: string
   ): Observable<ProductsResponse> {
 
@@ -49,16 +77,24 @@ export class ApiService {
   }
 
 
+  // =========================================================
+  // CREATE PRODUCT
+  // =========================================================
+
   createProduct(
     product: ProductCreate
-  ): Observable<ProductsResponse> {
+  ): Observable<ProductResponse> {
 
-    return this.http.post<ProductsResponse>(
+    return this.http.post<ProductResponse>(
       `${this.baseUrl}/products`,
       product
     );
   }
 
+
+  // =========================================================
+  // UPDATE PRODUCT
+  // =========================================================
 
   updateProduct(
     productId: string,
@@ -71,6 +107,10 @@ export class ApiService {
     );
   }
 
+
+  // =========================================================
+  // DELETE PRODUCT
+  // =========================================================
 
   deleteProduct(
     productId: string
@@ -119,6 +159,10 @@ export class ApiService {
   }
 
 
+  // =========================================================
+  // CREATE PARTNER
+  // =========================================================
+
   createPartner(
     partner: PartnerCreate
   ): Observable<PartnerResponse> {
@@ -129,6 +173,10 @@ export class ApiService {
     );
   }
 
+
+  // =========================================================
+  // UPDATE PARTNER
+  // =========================================================
 
   updatePartner(
     partnerId: string,
@@ -141,6 +189,10 @@ export class ApiService {
     );
   }
 
+
+  // =========================================================
+  // DELETE PARTNER
+  // =========================================================
 
   deletePartner(
     partnerId: string
