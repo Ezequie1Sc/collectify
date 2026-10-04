@@ -54,8 +54,8 @@ export class ApiService {
   // BASE URL
   // =========================================================
 
-  private readonly baseUrl =
-    'http://127.0.0.1:8000';
+ private readonly baseUrl =
+  'https://collectify-api-udxk.onrender.com';
 
 
   // =========================================================
