@@ -1,0 +1,689 @@
+<div class="ai-shell">
+
+  <app-header />
+
+  <main class="ai-page">
+
+    <div class="ai-container">
+
+      <!-- ENCABEZADO -->
+
+      <header class="ai-heading">
+
+        <div class="ai-heading__content">
+
+          <div class="ai-brand">
+            <span class="ai-brand__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="m12 3 2.1 6.9L21 12l-6.9 2.1L12 21l-2.1-6.9L3 12l6.9-2.1L12 3Z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+
+            <span>COLLECTIFY</span>
+            <span class="ai-brand__badge">AI</span>
+          </div>
+
+          <h1>
+            De tus datos
+            <span>a tu próxima decisión.</span>
+          </h1>
+
+          <p>
+            Consulta tu inventario, explora tus ventas
+            y encuentra respuestas para organizar mejor tu negocio.
+          </p>
+
+        </div>
+
+
+        @if (hasContent()) {
+          <button
+            type="button"
+            class="button button--secondary"
+            [disabled]="loading()"
+            (click)="clear()"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 5v14M5 12h14"
+                stroke-linecap="round"
+              />
+            </svg>
+
+            Nueva consulta
+          </button>
+        }
+
+      </header>
+
+
+      <!-- CONSULTA + ACCESOS RÁPIDOS -->
+
+      <div class="consultation-grid">
+
+        <section
+          class="composer glass-panel"
+          aria-labelledby="composer-title"
+        >
+
+          <div class="panel-heading">
+
+            <span class="eyebrow">TU CONSULTA</span>
+
+            <h2 id="composer-title">
+              ¿Qué necesitas saber?
+            </h2>
+
+            <p>
+              Escribe una pregunta sobre tus productos,
+              existencias o ventas.
+            </p>
+
+          </div>
+
+
+          <form
+            class="question-form"
+            (ngSubmit)="analyze()"
+          >
+
+            <label class="sr-only" for="ai-question">
+              Pregunta para Collectify AI
+            </label>
+
+            <div
+              class="composer-input"
+              [class.composer-input--busy]="loading()"
+            >
+
+              <textarea
+                #questionInput
+                id="ai-question"
+                name="question"
+                [ngModel]="question()"
+                (ngModelChange)="question.set($event)"
+                placeholder="Por ejemplo: ¿qué productos tienen poco stock y cuáles debería reabastecer primero?"
+                rows="6"
+                [readOnly]="loading()"
+                aria-describedby="question-hint"
+                (keydown.control.enter)="onShortcut($event)"
+                (keydown.meta.enter)="onShortcut($event)"
+              ></textarea>
+
+
+              <div class="composer-input__footer">
+
+                <span class="input-caption">
+                  <span class="input-caption__dot" aria-hidden="true"></span>
+                  Inventario y ventas
+                </span>
+
+                @if (question()) {
+                  <button
+                    type="button"
+                    class="text-button"
+                    [disabled]="loading()"
+                    (click)="question.set('')"
+                  >
+                    Borrar texto
+                  </button>
+                }
+
+              </div>
+
+            </div>
+
+
+            <div class="composer-actions">
+
+              <p id="question-hint">
+                <kbd>Ctrl</kbd> + <kbd>Enter</kbd>
+                <span>o ⌘ + Enter para enviar</span>
+              </p>
+
+              <button
+                type="submit"
+                class="button button--primary"
+                [disabled]="!canAnalyze()"
+              >
+
+                @if (loading()) {
+
+                  <span class="spinner spinner--small" aria-hidden="true"></span>
+                  Analizando…
+
+                } @else {
+
+                  Analizar consulta
+
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M5 12h14m-6-6 6 6-6 6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+
+                }
+
+              </button>
+
+            </div>
+
+          </form>
+
+        </section>
+
+
+        <aside
+          class="suggestions glass-panel"
+          aria-labelledby="suggestions-title"
+        >
+
+          <div class="panel-heading">
+            <span class="eyebrow">PARA EMPEZAR</span>
+            <h2 id="suggestions-title">Preguntas rápidas</h2>
+            <p>Selecciona una para iniciar el análisis.</p>
+          </div>
+
+
+          <div class="suggestions__list">
+
+            @for (item of quickQuestions; track item.question) {
+
+              <button
+                type="button"
+                class="suggestion"
+                [disabled]="loading()"
+                (click)="askQuickQuestion(item.question)"
+              >
+
+                <span class="suggestion__icon" aria-hidden="true">
+
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    @switch (item.icon) {
+
+                      @case ('box') {
+                        <path d="m12 3 9 5-9 5-9-5 9-5Z" />
+                        <path d="M3 8v9l9 5 9-5V8M12 13v9M7.5 5.5l9 5" />
+                      }
+
+                      @case ('trend') {
+                        <path d="m4 17 6-6 4 4 6-10M14 5h6v6" />
+                      }
+
+                      @case ('stock') {
+                        <path d="M5 20V10M12 20V4M19 20v-6M3 20h18" />
+                      }
+
+                      @default {
+                        <rect x="3" y="3" width="7" height="7" rx="2" />
+                        <rect x="14" y="3" width="7" height="7" rx="2" />
+                        <rect x="3" y="14" width="7" height="7" rx="2" />
+                        <rect x="14" y="14" width="7" height="7" rx="2" />
+                      }
+
+                    }
+                  </svg>
+
+                </span>
+
+
+                <span class="suggestion__text">
+                  <strong>{{ item.title }}</strong>
+                  <span>{{ item.description }}</span>
+                </span>
+
+                <span class="suggestion__arrow" aria-hidden="true">
+                  ↗
+                </span>
+
+              </button>
+
+            }
+
+          </div>
+
+        </aside>
+
+      </div>
+
+
+      <!-- MENSAJE DE CONSULTA DETENIDA -->
+
+      @if (notice()) {
+        <div class="notice notice--neutral" role="status">
+          <p>{{ notice() }}</p>
+        </div>
+      }
+
+
+      <!-- ERROR -->
+
+      @if (error()) {
+
+        <div class="notice notice--error" role="alert">
+
+          <div>
+            <strong>No se pudo completar la consulta</strong>
+            <p>{{ error() }}</p>
+          </div>
+
+          <button
+            type="button"
+            class="button button--secondary"
+            [disabled]="!canAnalyze()"
+            (click)="analyze()"
+          >
+            Reintentar
+          </button>
+
+        </div>
+
+      }
+
+
+      <!-- ESPERA -->
+
+      @if (loading()) {
+
+        <section
+          class="analysis-status glass-panel"
+          aria-labelledby="analysis-status-title"
+          aria-busy="true"
+        >
+
+          <div class="analysis-status__main">
+
+            <div class="analysis-orb" aria-hidden="true">
+              <span class="spinner"></span>
+            </div>
+
+            <div role="status">
+              <span class="eyebrow">COLLECTIFY AI</span>
+
+              <h2 id="analysis-status-title">
+                Preparando tu respuesta
+              </h2>
+
+              <p>
+                Esperando el resultado de tu consulta.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              class="button button--secondary"
+              (click)="cancel()"
+            >
+              Detener
+            </button>
+
+          </div>
+
+
+          <div class="submitted-question">
+            <span>Tu pregunta</span>
+            <p>{{ submittedQuestion() }}</p>
+          </div>
+
+          <div class="skeleton-lines" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+        </section>
+
+      }
+
+
+      <!-- RESPUESTA -->
+
+      @if (answer() && !loading()) {
+
+        <section
+          class="response glass-panel"
+          aria-labelledby="response-title"
+        >
+
+          <header class="response__header">
+
+            <div class="response__identity">
+
+              <span class="response__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="m12 3 2.1 6.9L21 12l-6.9 2.1L12 21l-2.1-6.9L3 12l6.9-2.1L12 3Z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+
+              <div>
+                <span class="eyebrow">COLLECTIFY AI</span>
+
+                <h2 id="response-title">
+                  Una mirada a tu consulta
+                </h2>
+
+                <p class="response__timestamp" role="status">
+                  Respuesta recibida
+                  @if (answeredAt()) {
+                    · {{ answeredAt() | date:'HH:mm' }}
+                  }
+                </p>
+              </div>
+
+            </div>
+
+
+            <button
+              type="button"
+              class="button button--secondary copy-button"
+              (click)="copyAnswer()"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                aria-hidden="true"
+              >
+                <rect x="8" y="8" width="12" height="13" rx="2" />
+                <path
+                  d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"
+                  stroke-linecap="round"
+                />
+              </svg>
+
+              {{
+                copyState() === 'copied'
+                  ? 'Copiado'
+                  : 'Copiar respuesta'
+              }}
+            </button>
+
+          </header>
+
+
+          <div class="copy-feedback" role="status" aria-live="polite">
+            @if (copyState() === 'copied') {
+              Respuesta copiada al portapapeles.
+            }
+
+            @if (copyState() === 'error') {
+              No se pudo copiar automáticamente.
+              Puedes seleccionar el texto y copiarlo.
+            }
+          </div>
+
+
+          <div class="submitted-question submitted-question--response">
+            <span>Tu pregunta</span>
+            <p>{{ submittedQuestion() }}</p>
+          </div>
+
+
+          <div class="response-grid">
+
+            @for (
+              section of answerSections();
+              track $index;
+              let sectionIndex = $index
+            ) {
+
+              <article
+                class="answer-card"
+                [class.answer-card--wide]="section.wide"
+              >
+
+                <div class="answer-card__heading">
+
+                  <span class="section-number" aria-hidden="true">
+                    {{ sectionIndex + 1 | number:'2.0-0' }}
+                  </span>
+
+                  <h3>
+                    @if (section.title.length) {
+
+                      <ng-container
+                        [ngTemplateOutlet]="inlineContent"
+                        [ngTemplateOutletContext]="{
+                          $implicit: section.title
+                        }"
+                      ></ng-container>
+
+                    } @else {
+
+                      Respuesta
+
+                    }
+                  </h3>
+
+                </div>
+
+
+                <div class="answer-body">
+
+                  @for (block of section.blocks; track $index) {
+
+                    @switch (block.kind) {
+
+                      @case ('paragraph') {
+
+                        <p class="answer-paragraph">
+                          <ng-container
+                            [ngTemplateOutlet]="inlineContent"
+                            [ngTemplateOutletContext]="{
+                              $implicit: block.parts
+                            }"
+                          ></ng-container>
+                        </p>
+
+                      }
+
+
+                      @case ('quote') {
+
+                        <blockquote class="answer-quote">
+                          <ng-container
+                            [ngTemplateOutlet]="inlineContent"
+                            [ngTemplateOutletContext]="{
+                              $implicit: block.parts
+                            }"
+                          ></ng-container>
+                        </blockquote>
+
+                      }
+
+
+                      @case ('list') {
+
+                        <ul class="answer-list" role="list">
+
+                          @for (item of block.items; track $index) {
+
+                            <li [style.padding-left.rem]="item.depth * 0.8">
+
+                              <span class="answer-list__marker">
+                                {{ item.marker }}
+                              </span>
+
+                              <div>
+                                <ng-container
+                                  [ngTemplateOutlet]="inlineContent"
+                                  [ngTemplateOutletContext]="{
+                                    $implicit: item.parts
+                                  }"
+                                ></ng-container>
+                              </div>
+
+                            </li>
+
+                          }
+
+                        </ul>
+
+                      }
+
+
+                      @case ('table') {
+
+                        <div
+                          class="answer-table-wrap"
+                          tabindex="0"
+                          role="region"
+                          aria-label="Tabla de la respuesta; desplázate horizontalmente si es necesario"
+                        >
+
+                          <table class="answer-table">
+
+                            <thead>
+                              <tr>
+                                @for (cell of block.headers; track $index) {
+                                  <th scope="col">
+                                    <ng-container
+                                      [ngTemplateOutlet]="inlineContent"
+                                      [ngTemplateOutletContext]="{
+                                        $implicit: cell
+                                      }"
+                                    ></ng-container>
+                                  </th>
+                                }
+                              </tr>
+                            </thead>
+
+                            <tbody>
+                              @for (row of block.rows; track $index) {
+                                <tr>
+                                  @for (cell of row; track $index) {
+                                    <td>
+                                      <ng-container
+                                        [ngTemplateOutlet]="inlineContent"
+                                        [ngTemplateOutletContext]="{
+                                          $implicit: cell
+                                        }"
+                                      ></ng-container>
+                                    </td>
+                                  }
+                                </tr>
+                              }
+                            </tbody>
+
+                          </table>
+
+                        </div>
+
+                      }
+
+
+                      @case ('code') {
+
+                        <div class="answer-code">
+
+                          <span class="answer-code__label">
+                            {{ block.language || 'Texto' }}
+                          </span>
+
+                          <pre tabindex="0"><code>{{ block.text }}</code></pre>
+
+                        </div>
+
+                      }
+
+
+                      @case ('divider') {
+                        <hr class="answer-divider" />
+                      }
+
+                    }
+
+                  }
+
+                </div>
+
+              </article>
+
+            }
+
+          </div>
+
+
+          <footer class="response__footer">
+            <span>
+              Puedes escribir otra pregunta para iniciar una nueva consulta.
+            </span>
+
+            <button
+              type="button"
+              class="text-button"
+              (click)="clear()"
+            >
+              Nueva consulta
+              <span aria-hidden="true">↗</span>
+            </button>
+          </footer>
+
+        </section>
+
+      }
+
+    </div>
+
+  </main>
+
+</div>
+
+
+<!-- TEXTO SEGURO: NEGRITAS Y CÓDIGO EN LÍNEA -->
+
+<ng-template #inlineContent let-parts>
+
+  @for (part of parts; track $index) {
+
+    @switch (part.kind) {
+
+      @case ('strong') {
+        <strong class="inline-strong">{{ part.text }}</strong>
+      }
+
+      @case ('code') {
+        <code class="inline-code">{{ part.text }}</code>
+      }
+
+      @default {
+        <span>{{ part.text }}</span>
+      }
+
+    }
+
+  }
+
+</ng-template>
