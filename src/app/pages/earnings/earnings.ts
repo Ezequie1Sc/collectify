@@ -1,23 +1,26 @@
 import {
-  Component,
-  OnInit,
   ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  OnInit,
   inject
 } from '@angular/core';
 
-import {
-  CommonModule
-} from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import {
-  EMPTY
+  takeUntilDestroyed
+} from '@angular/core/rxjs-interop';
+
+import {
+  finalize,
+  timeout
 } from 'rxjs';
 
 import {
-  catchError,
-  finalize,
-  timeout
-} from 'rxjs/operators';
+  Header
+} from '../../components/header/header';
 
 import {
   ApiService
@@ -30,348 +33,330 @@ import {
 } from '../../core/models/earnings';
 
 
+interface FinancialBar {
+  label: string;
+  value: number;
+  type: 'sales' | 'cost' | 'profit';
+}
+
+
 @Component({
   selector: 'app-earnings',
   standalone: true,
+
   imports: [
-    CommonModule
+    CommonModule,
+    FormsModule,
+    Header
   ],
+
   templateUrl: './earnings.html',
   styleUrl: './earnings.scss'
 })
 export class Earnings implements OnInit {
 
   private readonly api = inject(ApiService);
-
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly currencyFormatter = new Intl.NumberFormat(
+    'es-MX',
+    {
+      style: 'currency',
+      currency: 'MXN',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }
+  );
 
 
-  // =========================================================
+  // =======================================================
   // STATE
-  // =========================================================
+  // =======================================================
 
   loading = false;
-
   error = '';
 
   earnings: EarningsResponse | null = null;
+  lastUpdated: Date | null = null;
+
+  search = '';
 
 
-  // =========================================================
-  // GETTERS
-  // =========================================================
+  // =======================================================
+  // SUMMARY
+  // =======================================================
 
   get summary(): EarningsSummary | null {
-
     return this.earnings?.summary ?? null;
-
   }
-
 
   get partners(): PartnerEarnings[] {
-
     return this.earnings?.partners ?? [];
-
   }
-
 
   get activePartners(): PartnerEarnings[] {
-
-    return this.partners.filter(
-      partner => partner.is_active
-    );
-
+    return this.partners.filter(partner => partner.is_active);
   }
 
+  get partnersWithSales(): number {
+    return this.partners.filter(partner =>
+      this.toNumber(partner.total_transactions) > 0 ||
+      this.toNumber(partner.products_sold) > 0
+    ).length;
+  }
 
   get totalProfit(): number {
-
-    return this.summary?.total_profit ?? 0;
-
+    return this.toNumber(this.summary?.total_profit);
   }
-
 
   get totalSales(): number {
-
-    return this.summary?.total_sales ?? 0;
-
+    return this.toNumber(this.summary?.total_sales);
   }
-
 
   get totalCost(): number {
-
-    return this.summary?.total_cost ?? 0;
-
+    return this.toNumber(this.summary?.total_cost);
   }
-
 
   get totalTransactions(): number {
-
-    return this.summary?.total_transactions ?? 0;
-
+    return this.toNumber(this.summary?.total_transactions);
   }
-
 
   get totalItemsSold(): number {
-
-    return this.summary?.total_items_sold ?? 0;
-
+    return this.toNumber(this.summary?.total_items_sold);
   }
 
+  get averageTicket(): number | null {
+    return this.totalTransactions > 0
+      ? this.totalSales / this.totalTransactions
+      : null;
+  }
 
-  // =========================================================
-  // INIT
-  // =========================================================
-
-  ngOnInit(): void {
-
-    console.log(
-      '[EARNINGS] Componente inicializado'
+  get profitMargin(): number | null {
+    return this.getProfitMargin(
+      this.totalSales,
+      this.totalProfit
     );
-
-    this.loadEarnings();
-
   }
 
 
-  // =========================================================
-  // LOAD EARNINGS
-  // =========================================================
+  // =======================================================
+  // PARTNERS
+  // =======================================================
 
-  loadEarnings(): void {
+  get filteredPartners(): PartnerEarnings[] {
+    const query = this.normalize(this.search);
 
-    console.log(
-      '[EARNINGS] Iniciando consulta...'
-    );
+    return this.partners
+      .filter(partner => {
+        const text = this.normalize(
+          `${partner.partner_name} ${partner.email ?? ''}`
+        );
 
-
-    this.loading = true;
-
-    this.error = '';
-
-    /*
-     * NO ponemos earnings = null aquí.
-     *
-     * Si ya tenemos información y el usuario pulsa
-     * "Actualizar", conservamos los datos mientras
-     * llega la nueva respuesta.
-     */
-
-
-    this.cdr.detectChanges();
-
-
-    this.api.getEarnings()
-      .pipe(
-
-        timeout(10000),
-
-
-        catchError((error) => {
-
-          console.error(
-            '[EARNINGS] Error:',
-            error
-          );
-
-
-          if (
-            error?.name === 'TimeoutError'
-          ) {
-
-            this.error =
-              'El servidor tardó demasiado en responder.';
-
-          } else if (
-            error?.status === 0
-          ) {
-
-            this.error =
-              'No se pudo conectar con el servidor. Verifica que FastAPI esté ejecutándose.';
-
-          } else if (
-            error?.status
-          ) {
-
-            this.error =
-              `Error del servidor (${error.status}).`;
-
-          } else {
-
-            this.error =
-              'No se pudieron cargar las ganancias.';
-
-          }
-
-
-          return EMPTY;
-
-        }),
-
-
-        finalize(() => {
-
-          console.log(
-            '[EARNINGS] Consulta finalizada.'
-          );
-
-
-          this.loading = false;
-
-
-          /*
-           * Nos aseguramos de que Angular actualice
-           * inmediatamente la vista.
-           */
-          this.cdr.detectChanges();
-
-        })
-
-      )
-      .subscribe({
-
-        next: (response: EarningsResponse) => {
-
-          console.log(
-            '[EARNINGS] Respuesta recibida:',
-            response
-          );
-
-
-          this.earnings = response;
-
-          this.error = '';
-
-          /*
-           * Actualizamos la vista inmediatamente.
-           */
-          this.cdr.detectChanges();
-
-        },
-
-        error: (error) => {
-
-          /*
-           * Este bloque es de respaldo.
-           *
-           * catchError normalmente evita que llegue aquí,
-           * pero dejamos el estado consistente por seguridad.
-           */
-
-          console.error(
-            '[EARNINGS] Error no controlado:',
-            error
-          );
-
-
-          this.loading = false;
-
-          this.error =
-            'No se pudieron cargar las ganancias.';
-
-
-          this.cdr.detectChanges();
-
-        }
-
-      });
-
+        return !query || text.includes(query);
+      })
+      .slice()
+      .sort((a, b) =>
+        this.toNumber(b.profit) - this.toNumber(a.profit)
+      );
   }
 
 
-  // =========================================================
-  // FORMAT CURRENCY
-  // =========================================================
+  // =======================================================
+  // CHART
+  // =======================================================
 
-  formatCurrency(
-    value: number
-  ): string {
-
-    return new Intl.NumberFormat(
-      'es-MX',
+  get financialBars(): FinancialBar[] {
+    return [
       {
-        style: 'currency',
-        currency: 'MXN',
-        minimumFractionDigits: 2
+        label: 'Ventas',
+        value: this.totalSales,
+        type: 'sales'
+      },
+      {
+        label: 'Costos',
+        value: this.totalCost,
+        type: 'cost'
+      },
+      {
+        label: 'Ganancia',
+        value: this.totalProfit,
+        type: 'profit'
       }
-    ).format(
-      Number(value) || 0
-    );
-
+    ];
   }
 
+  get chartMaximum(): number {
+    return Math.max(
+      Math.abs(this.totalSales),
+      Math.abs(this.totalCost),
+      Math.abs(this.totalProfit)
+    );
+  }
 
-  // =========================================================
-  // PROFIT PERCENTAGE
-  // =========================================================
+  get hasFinancialValues(): boolean {
+    return this.chartMaximum > 0;
+  }
 
-  getProfitPercentage(
-    profit: number
-  ): number {
+  get hasNegativeValues(): boolean {
+    return this.financialBars.some(bar => bar.value < 0);
+  }
 
-    if (
-      !this.totalProfit ||
-      this.totalProfit <= 0
-    ) {
-
+  barWidth(value: number): number {
+    if (this.chartMaximum === 0) {
       return 0;
-
     }
 
-
-    return Math.min(
+    const width = Math.min(
       100,
-      Math.max(
-        0,
-        (
-          Number(profit) /
-          this.totalProfit
-        ) * 100
-      )
+      Math.abs(value) / this.chartMaximum * 100
     );
 
+    // Si hay valores negativos, el cero queda en el centro.
+    return this.hasNegativeValues ? width / 2 : width;
+  }
+
+  barLeft(value: number): number {
+    if (!this.hasNegativeValues) {
+      return 0;
+    }
+
+    return value < 0
+      ? 50 - this.barWidth(value)
+      : 50;
   }
 
 
-  // =========================================================
-  // PROFIT MARGIN
-  // =========================================================
+  // =======================================================
+  // INIT / LOAD
+  // =======================================================
+
+  ngOnInit(): void {
+    this.loadEarnings();
+  }
+
+  loadEarnings(): void {
+    if (this.loading) {
+      return;
+    }
+
+    this.loading = true;
+    this.error = '';
+
+    // Conservamos la respuesta anterior durante la actualización.
+    this.cdr.markForCheck();
+
+    this.api
+      .getEarnings()
+      .pipe(
+        timeout(15000),
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          this.loading = false;
+
+          if (!this.destroyRef.destroyed) {
+            this.cdr.markForCheck();
+          }
+        })
+      )
+      .subscribe({
+        next: (response: EarningsResponse) => {
+          this.earnings = response;
+          this.lastUpdated = new Date();
+          this.error = '';
+
+          this.cdr.markForCheck();
+        },
+
+        error: error => {
+          this.error = this.readError(error);
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  refresh(): void {
+    this.loadEarnings();
+  }
+
+
+  // =======================================================
+  // FORMAT
+  // =======================================================
+
+  formatCurrency(value: unknown): string {
+    return this.currencyFormatter.format(
+      this.toNumber(value)
+    );
+  }
 
   getProfitMargin(
     sales: number,
     profit: number
-  ): number {
+  ): number | null {
+    const totalSales = this.toNumber(sales);
+    const totalProfit = this.toNumber(profit);
 
-    if (
-      !sales ||
-      sales <= 0
-    ) {
+    // Sin ventas positivas, el margen no es calculable.
+    return totalSales > 0
+      ? totalProfit / totalSales * 100
+      : null;
+  }
 
-      return 0;
+  initials(name: string): string {
+    return name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(part => part.charAt(0))
+      .join('')
+      .toUpperCase() || '?';
+  }
 
+  private toNumber(value: unknown): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  private normalize(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  private readError(error: unknown): string {
+    const response = error as {
+      name?: string;
+      status?: number;
+      error?: {
+        detail?: unknown;
+        message?: unknown;
+      };
+    };
+
+    if (response?.name === 'TimeoutError') {
+      return 'La consulta tardó demasiado. Intenta nuevamente.';
     }
 
+    if (response?.status === 0) {
+      return 'No se pudo conectar con el servidor. Intenta nuevamente en unos momentos.';
+    }
 
-    return (
-      Number(profit) /
-      Number(sales)
-    ) * 100;
+    const detail = response?.error?.detail;
 
+    if (typeof detail === 'string' && detail.trim()) {
+      return detail;
+    }
+
+    const message = response?.error?.message;
+
+    if (typeof message === 'string' && message.trim()) {
+      return message;
+    }
+
+    return 'No se pudieron cargar las ganancias.';
   }
-
-
-  // =========================================================
-  // REFRESH
-  // =========================================================
-
-  refresh(): void {
-
-    console.log(
-      '[EARNINGS] Actualización manual'
-    );
-
-    this.loadEarnings();
-
-  }
-
 }
