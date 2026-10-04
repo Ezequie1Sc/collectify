@@ -1,1 +1,97 @@
-/* You can add global styles to this file, and also import other style files */
+/* =========================================================
+   TIPOGRAFÍA GLOBAL
+========================================================= */
+
+:root {
+  --font-ui:
+    "Segoe UI Variable Text",
+    "Segoe UI",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+  color: #20232b;
+  background: #e9ecf3;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/*
+  Aplica la misma fuente a los componentes internos.
+  Está limitado al dashboard.
+*/
+
+.dashboard-layout :is(
+  app-product-card,
+  app-product-form,
+  app-empty-state
+),
+.dashboard-layout :is(
+  app-product-card,
+  app-product-form,
+  app-empty-state
+) * {
+  font-family: var(--font-ui);
+}
+
+.dashboard-layout :is(
+  app-product-card,
+  app-product-form,
+  app-empty-state
+) :is(p, label, small) {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.dashboard-layout :is(
+  app-product-card,
+  app-product-form,
+  app-empty-state
+) :is(input, select, textarea) {
+  font-size: 16px;
+}
+
+.dashboard-layout :is(
+  app-product-card,
+  app-product-form,
+  app-empty-state
+) button {
+  min-height: 44px;
+  font-size: 15px;
+}
+
+::selection {
+  color: #20232b;
+  background: #d8def5;
+}
