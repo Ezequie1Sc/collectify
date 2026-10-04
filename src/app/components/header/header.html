@@ -1,23 +1,61 @@
-<header class="header">
+<!-- CABECERA MÓVIL -->
+<div class="mobile-header">
+  <a
+    routerLink="/dashboard"
+    class="mobile-brand"
+    (click)="closeMobileMenu()"
+  >
+    <span class="brand__mark">C</span>
+    <span>Collectify</span>
+  </a>
 
-  <div class="header__container">
+  <button
+    #mobileToggle
+    type="button"
+    class="icon-button"
+    aria-controls="collectify-sidebar"
+    [attr.aria-expanded]="mobileMenuOpen"
+    [attr.aria-label]="mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'"
+    (click)="toggleMobileMenu()"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 8h14M5 16h14" />
+    </svg>
+  </button>
+</div>
 
-    <!-- =====================================================
-         BRAND
-    ====================================================== -->
+<!-- FONDO MÓVIL -->
+<button
+  type="button"
+  class="backdrop"
+  [class.backdrop--open]="mobileMenuOpen"
+  [attr.tabindex]="mobileMenuOpen ? 0 : -1"
+  aria-label="Cerrar menú"
+  (click)="closeMobileMenu()"
+></button>
+
+<!-- BARRA LATERAL -->
+<header
+  id="collectify-sidebar"
+  class="sidebar"
+  [class.sidebar--collapsed]="collapsed"
+  [class.sidebar--open]="mobileMenuOpen"
+>
+  <!-- =====================================================
+       PARTE SUPERIOR
+       ===================================================== -->
+
+  <div class="sidebar__top">
 
     <a
       routerLink="/dashboard"
       class="brand"
+      aria-label="Collectify, ir al dashboard"
       (click)="closeMobileMenu()"
     >
+      <span class="brand__mark">C</span>
 
-      <div class="brand__icon">
-        C
-      </div>
-
-      <div class="brand__text">
-
+      <span class="brand__copy">
         <span class="brand__name">
           Collectify
         </span>
@@ -25,237 +63,225 @@
         <span class="brand__description">
           Inventario inteligente
         </span>
-
-      </div>
-
+      </span>
     </a>
 
-
-    <!-- =====================================================
-         DESKTOP NAVIGATION
-    ====================================================== -->
-
-    <nav
-      class="navigation"
-      aria-label="Navegación principal"
+    <button
+      type="button"
+      class="icon-button mobile-close"
+      aria-label="Cerrar menú"
+      (click)="closeMobileMenu()"
     >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m6 6 12 12M18 6 6 18" />
+      </svg>
+    </button>
 
-      <!-- Dashboard -->
-
-      <a
-        routerLink="/dashboard"
-        routerLinkActive="navigation__link--active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        class="navigation__link"
-      >
-
-        <span class="navigation__icon">
-          ⌂
-        </span>
-
-        <span>
-          Dashboard
-        </span>
-
-      </a>
+  </div>
 
 
-      <!-- Ventas -->
+  <!-- =====================================================
+       NAVEGACIÓN
+       ===================================================== -->
 
-      <a
-        routerLink="/sales"
-        routerLinkActive="navigation__link--active"
-        class="navigation__link"
-      >
+  <nav
+    class="navigation"
+    aria-label="Navegación principal"
+  >
 
-        <span class="navigation__icon">
-          $
-        </span>
+    <!-- NAVEGACIÓN PRINCIPAL -->
 
-        <span>
-          Ventas
-        </span>
+    <div class="navigation__group">
 
-      </a>
+      @for (
+        item of mainNavigation;
+        track item.route
+      ) {
+
+        <a
+          class="navigation__link"
+          [routerLink]="item.route"
+          routerLinkActive="navigation__link--active"
+          [routerLinkActiveOptions]="{
+            exact: item.exact
+          }"
+          ariaCurrentWhenActive="page"
+          [attr.aria-label]="item.label"
+          [attr.title]="collapsed ? item.label : null"
+          (click)="closeMobileMenu()"
+        >
+
+          <svg
+            class="navigation__icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+
+            @for (
+              path of item.paths;
+              track $index
+            ) {
+
+              <path
+                [attr.d]="path"
+              />
+
+            }
+
+          </svg>
+
+          <span class="navigation__label">
+            {{ item.label }}
+          </span>
+
+        </a>
+
+      }
+
+    </div>
 
 
-      <!-- Socios -->
+    <!-- =================================================
+         ASISTENTE IA
+         ================================================= -->
 
-      <a
-        routerLink="/partners"
-        routerLinkActive="navigation__link--active"
-        class="navigation__link"
-      >
+    <div class="navigation__section">
 
-        <span class="navigation__icon">
-          ◉
-        </span>
+      <span class="navigation__caption">
+        ASISTENTE
+      </span>
 
-        <span>
-          Socios
-        </span>
-
-      </a>
-
-
-      <!-- Ganancias -->
-
-      <a
-        routerLink="/earnings"
-        routerLinkActive="navigation__link--active"
-        class="navigation__link"
-      >
-
-        <span class="navigation__icon">
-          ↗
-        </span>
-
-        <span>
-          Ganancias
-        </span>
-
-      </a>
-
-
-      <!-- IA -->
 
       <a
         routerLink="/ai"
         routerLinkActive="navigation__link--active"
+        ariaCurrentWhenActive="page"
         class="navigation__link navigation__link--ai"
+        aria-label="Asistente IA"
+        [attr.title]="collapsed ? 'Asistente IA' : null"
+        (click)="closeMobileMenu()"
       >
 
-        <span class="navigation__icon">
-          ✦
-        </span>
+        <!-- ICONO IA -->
 
-        <span>
-          Asistente IA
-        </span>
+        <svg
+          class="navigation__icon"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
 
-        <span class="navigation__badge">
-          Próximamente
+          <path
+            d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z"
+          />
+
+        </svg>
+
+
+        <!-- TEXTO -->
+
+        <span class="navigation__ai-copy">
+
+          <span class="navigation__label">
+            Asistente IA
+          </span>
+
+          <span class="navigation__badge">
+            Inteligente
+          </span>
+
         </span>
 
       </a>
 
-    </nav>
+    </div>
+
+  </nav>
 
 
-    <!-- =====================================================
-         RIGHT SIDE
-    ====================================================== -->
+  <!-- =====================================================
+       FOOTER
+       ===================================================== -->
 
-    <div class="header__actions">
+  <footer class="sidebar__footer">
 
-      <button
-        type="button"
-        class="profile"
-        aria-label="Perfil"
-      >
+    <!-- PERFIL -->
 
-        <span class="profile__avatar">
-          E
-        </span>
+    <div
+      class="profile"
+      aria-label="Perfil de Ezequiel"
+      [attr.title]="collapsed ? 'Ezequiel' : null"
+    >
+
+      <span class="profile__avatar">
+        E
+      </span>
+
+      <span class="profile__copy">
 
         <span class="profile__name">
           Ezequiel
         </span>
 
-        <span class="profile__arrow">
-          ▾
+        <span class="profile__description">
+          Collectify
         </span>
 
-      </button>
-
-
-      <!-- Mobile button -->
-
-      <button
-        type="button"
-        class="menu-button"
-        aria-label="Abrir menú"
-        [attr.aria-expanded]="mobileMenuOpen"
-        (click)="toggleMobileMenu()"
-      >
-
-        <span></span>
-        <span></span>
-        <span></span>
-
-      </button>
+      </span>
 
     </div>
 
-  </div>
 
+    <!-- BOTÓN COLAPSAR -->
 
-  <!-- =======================================================
-       MOBILE NAVIGATION
-  ======================================================== -->
-
-  <nav
-    class="mobile-navigation"
-    [class.mobile-navigation--open]="mobileMenuOpen"
-    aria-label="Navegación móvil"
-  >
-
-    <a
-      routerLink="/dashboard"
-      routerLinkActive="mobile-navigation__link--active"
-      [routerLinkActiveOptions]="{ exact: true }"
-      class="mobile-navigation__link"
-      (click)="closeMobileMenu()"
+    <button
+      type="button"
+      class="collapse-button"
+      aria-controls="collectify-sidebar"
+      [attr.aria-expanded]="!collapsed"
+      [attr.aria-label]="
+        collapsed
+          ? 'Expandir menú'
+          : 'Contraer menú'
+      "
+      [attr.title]="
+        collapsed
+          ? 'Expandir menú'
+          : 'Contraer menú'
+      "
+      (click)="toggleSidebar()"
     >
-      <span>⌂</span>
-      Dashboard
-    </a>
 
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
 
-    <a
-      routerLink="/sales"
-      routerLinkActive="mobile-navigation__link--active"
-      class="mobile-navigation__link"
-      (click)="closeMobileMenu()"
-    >
-      <span>$</span>
-      Ventas
-    </a>
+        <rect
+          x="3"
+          y="4"
+          width="18"
+          height="16"
+          rx="3"
+        />
 
+        <path d="M9 4v16" />
 
-    <a
-      routerLink="/partners"
-      routerLinkActive="mobile-navigation__link--active"
-      class="mobile-navigation__link"
-      (click)="closeMobileMenu()"
-    >
-      <span>◉</span>
-      Socios
-    </a>
+        <path
+          [attr.d]="
+            collapsed
+              ? 'm13 9 3 3-3 3'
+              : 'm16 9-3 3 3 3'
+          "
+        />
 
+      </svg>
 
-    <a
-      routerLink="/earnings"
-      routerLinkActive="mobile-navigation__link--active"
-      class="mobile-navigation__link"
-      (click)="closeMobileMenu()"
-    >
-      <span>↗</span>
-      Ganancias
-    </a>
+      <span class="collapse-button__label">
+        Contraer menú
+      </span>
 
+    </button>
 
-    <a
-      routerLink="/ai"
-      routerLinkActive="mobile-navigation__link--active"
-      class="mobile-navigation__link mobile-navigation__link--ai"
-      (click)="closeMobileMenu()"
-    >
-      <span>✦</span>
-      Asistente IA
-      <small>Próximamente</small>
-    </a>
-
-  </nav>
+  </footer>
 
 </header>
