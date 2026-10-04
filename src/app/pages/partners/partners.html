@@ -1,280 +1,616 @@
-<main class="partners">
+<div class="partners-shell">
 
-  <!-- =====================================================
-       HEADER
-  ====================================================== -->
+  <app-header />
 
-  <header class="partners__header">
+  <main class="partners">
 
-    <div>
+    <div class="partners__container">
 
-      <span class="eyebrow">
-        COLLECTIFY
-      </span>
+      <!-- ENCABEZADO -->
 
-      <h1>
-        Socios
-      </h1>
+      <header class="partners__header">
 
-      <p>
-        Administra las personas que aportan productos
-        al inventario.
-      </p>
+        <div class="partners__intro">
 
-    </div>
+          <span class="eyebrow">
+            COLLECTIFY / SOCIOS
+          </span>
 
+          <h1>
+            Las personas detrás
+            <span>de tu inventario.</span>
+          </h1>
 
-    <div class="partners__count">
-
-      <span>
-        SOCIOS
-      </span>
-
-      <strong>
-        {{ partners().length }}
-      </strong>
-
-    </div>
-
-  </header>
-
-
-  <!-- =====================================================
-       ALERTAS
-  ====================================================== -->
-
-  @if (success()) {
-
-    <div class="message message--success">
-
-      {{ success() }}
-
-    </div>
-
-  }
-
-
-  @if (error()) {
-
-    <div class="message message--error">
-
-      {{ error() }}
-
-    </div>
-
-  }
-
-
-  <!-- =====================================================
-       CONTENIDO
-  ====================================================== -->
-
-  <section class="partners__layout">
-
-
-    <!-- ===================================================
-         FORMULARIO
-    ==================================================== -->
-
-    <article class="partner-form">
-
-      <div class="section-heading">
-
-        <span class="eyebrow">
-          NUEVO SOCIO
-        </span>
-
-        <h2>
-          Registrar socio
-        </h2>
-
-        <p>
-          Agrega a una persona para poder asociar
-          sus productos al inventario.
-        </p>
-
-      </div>
-
-
-      <form
-        (ngSubmit)="createPartner()"
-      >
-
-        <div class="field">
-
-          <label for="name">
-            Nombre
-          </label>
-
-          <input
-            id="name"
-            type="text"
-            name="name"
-            [(ngModel)]="name"
-            placeholder="Ej. Carlos Pérez"
-            autocomplete="name"
-          />
+          <p>
+            Registra a tus socios y mantén sus datos
+            organizados en un solo lugar.
+          </p>
 
         </div>
 
 
-        <div class="field">
-
-          <label for="email">
-            Correo electrónico
-            <span>
-              Opcional
-            </span>
-          </label>
-
-          <input
-            id="email"
-            type="email"
-            name="email"
-            [(ngModel)]="email"
-            placeholder="correo@ejemplo.com"
-            autocomplete="email"
-          />
-
-        </div>
-
-
-        <button
-          type="submit"
-          class="primary-button"
-          [disabled]="saving()"
+        <div
+          class="partners__count"
+          [attr.aria-busy]="loading()"
         >
 
-          {{ saving()
-            ? 'Guardando...'
-            : 'Registrar socio'
-          }}
+          <div class="partners__count-top">
 
-        </button>
+            <span class="count-icon" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+              >
+                <circle cx="9" cy="8" r="3" />
+                <path
+                  d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M17 14a5 5 0 0 1 4 5v1"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </span>
 
-      </form>
+            <span>DIRECTORIO</span>
 
-    </article>
-
-
-    <!-- ===================================================
-         LISTADO
-    ==================================================== -->
-
-    <article class="partners-list">
-
-      <div class="section-heading">
-
-        <span class="eyebrow">
-          EQUIPO
-        </span>
-
-        <h2>
-          Socios registrados
-        </h2>
-
-        <p>
-          Personas que pueden tener productos
-          dentro del inventario.
-        </p>
-
-      </div>
-
-
-      @if (loading()) {
-
-        <div class="empty-message">
-
-          <p>
-            Cargando socios...
-          </p>
-
-        </div>
-
-      }
-
-      @else if (partners().length === 0) {
-
-        <div class="empty-message">
-
-          <div class="empty-icon">
-            +
           </div>
 
-          <h3>
-            No hay socios registrados
-          </h3>
+          <strong>
+            {{ loading() ? '—' : partners().length }}
+          </strong>
 
-          <p>
-            Registra el primer socio para comenzar
-            a organizar el inventario.
-          </p>
+          <span class="partners__count-label">
+            Socios registrados
+          </span>
 
         </div>
 
+      </header>
+
+
+      <!-- MENSAJES -->
+
+      @if (success()) {
+        <div
+          class="message message--success"
+          role="status"
+          aria-live="polite"
+        >
+          <span class="message__symbol" aria-hidden="true">✓</span>
+          <p>{{ success() }}</p>
+        </div>
       }
 
-      @else {
-
-        <div class="partner-items">
-
-          @for (
-            partner of partners();
-            track partner.id
-          ) {
-
-            <div class="partner-card">
-
-              <div class="partner-card__identity">
-
-                <div class="partner-avatar">
-
-                  {{ partner.name.charAt(0).toUpperCase() }}
-
-                </div>
+      @if (error()) {
+        <div
+          class="message message--error"
+          role="alert"
+        >
+          <span class="message__symbol" aria-hidden="true">!</span>
+          <p>{{ error() }}</p>
+        </div>
+      }
 
 
-                <div>
+      <div class="partners__layout">
 
-                  <h3>
-                    {{ partner.name }}
-                  </h3>
+        <!-- FORMULARIO -->
 
-                  @if (partner.email) {
+        <section
+          class="partner-form glass-panel"
+          aria-labelledby="partner-form-title"
+          [attr.aria-busy]="saving()"
+        >
 
-                    <p>
-                      {{ partner.email }}
-                    </p>
+          <div class="form-icon" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+            >
+              <circle cx="9" cy="8" r="3" />
+              <path
+                d="M3 20v-2a6 6 0 0 1 12 0v2M19 8v6M16 11h6"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
 
-                  }
 
-                  <span class="status">
-                    Activo
-                  </span>
+          <div class="section-heading">
 
-                </div>
+            <span class="eyebrow">NUEVO SOCIO</span>
+
+            <h2 id="partner-form-title">
+              Amplía tu equipo
+            </h2>
+
+            <p>
+              Registra a una persona para asociar
+              sus productos al inventario.
+            </p>
+
+          </div>
+
+
+          <form
+            #partnerForm="ngForm"
+            (ngSubmit)="createPartner(partnerForm)"
+            novalidate
+          >
+
+            <div class="field">
+
+              <label for="partner-name">
+                Nombre completo
+                <span class="required-mark" aria-hidden="true">*</span>
+              </label>
+
+              <div
+                class="input-wrap"
+                [class.input-wrap--invalid]="
+                  nameInput.invalid &&
+                  (nameInput.touched || partnerForm.submitted)
+                "
+              >
+
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="8" r="3.5" />
+                  <path
+                    d="M5 21v-2a7 7 0 0 1 14 0v2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+
+                <input
+                  id="partner-name"
+                  type="text"
+                  name="name"
+                  [(ngModel)]="name"
+                  #nameInput="ngModel"
+                  required
+                  autocomplete="name"
+                  placeholder="Ej. Carlos Pérez"
+                  [disabled]="saving()"
+                  [attr.aria-invalid]="
+                    nameInput.invalid &&
+                    (nameInput.touched || partnerForm.submitted)
+                  "
+                  [attr.aria-describedby]="
+                    nameInput.invalid &&
+                    (nameInput.touched || partnerForm.submitted)
+                      ? 'partner-name-error'
+                      : null
+                  "
+                />
 
               </div>
 
+              @if (
+                nameInput.invalid &&
+                (nameInput.touched || partnerForm.submitted)
+              ) {
+                <p
+                  id="partner-name-error"
+                  class="field-error"
+                >
+                  Escribe el nombre del socio.
+                </p>
+              }
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="partner-email">
+                Correo electrónico
+                <span class="optional-label">Opcional</span>
+              </label>
+
+              <div
+                class="input-wrap"
+                [class.input-wrap--invalid]="
+                  emailInput.invalid &&
+                  (emailInput.touched || partnerForm.submitted)
+                "
+              >
+
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  aria-hidden="true"
+                >
+                  <rect
+                    x="3"
+                    y="5"
+                    width="18"
+                    height="14"
+                    rx="3"
+                  />
+                  <path
+                    d="m4 7 8 6 8-6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+
+                <input
+                  id="partner-email"
+                  type="email"
+                  name="email"
+                  [(ngModel)]="email"
+                  #emailInput="ngModel"
+                  email
+                  autocomplete="email"
+                  placeholder="correo@ejemplo.com"
+                  [disabled]="saving()"
+                  [attr.aria-invalid]="
+                    emailInput.invalid &&
+                    (emailInput.touched || partnerForm.submitted)
+                  "
+                  [attr.aria-describedby]="
+                    emailInput.invalid &&
+                    (emailInput.touched || partnerForm.submitted)
+                      ? 'partner-email-error'
+                      : null
+                  "
+                />
+
+              </div>
+
+              @if (
+                emailInput.invalid &&
+                (emailInput.touched || partnerForm.submitted)
+              ) {
+                <p
+                  id="partner-email-error"
+                  class="field-error"
+                >
+                  Escribe un correo electrónico válido.
+                </p>
+              }
+
+            </div>
+
+
+            <button
+              type="submit"
+              class="button button--primary"
+              [disabled]="busy()"
+            >
+              @if (saving()) {
+
+                <span
+                  class="spinner spinner--small"
+                  aria-hidden="true"
+                ></span>
+
+                Guardando socio…
+
+              } @else {
+
+                Registrar socio
+                <span aria-hidden="true">↗</span>
+
+              }
+            </button>
+
+
+            <p class="form-note">
+              El nombre es obligatorio.
+              Puedes registrar al socio sin correo electrónico.
+            </p>
+
+          </form>
+
+        </section>
+
+
+        <!-- DIRECTORIO -->
+
+        <section
+          class="partners-list glass-panel"
+          aria-labelledby="partners-list-title"
+          [attr.aria-busy]="loading()"
+        >
+
+          <div class="list-header">
+
+            <div class="section-heading">
+
+              <span class="eyebrow">TU EQUIPO</span>
+
+              <h2 id="partners-list-title">
+                Socios registrados
+              </h2>
+
+              <p>
+                Consulta sus datos y administra tu directorio.
+              </p>
+
+            </div>
+
+
+            <button
+              type="button"
+              class="button button--secondary"
+              [disabled]="busy()"
+              (click)="loadPartners()"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                aria-hidden="true"
+              >
+                <path
+                  d="M20 7v5h-5M4 17v-5h5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17"
+                  stroke-linecap="round"
+                />
+              </svg>
+
+              {{ loading() ? 'Cargando…' : 'Actualizar' }}
+            </button>
+
+          </div>
+
+
+          <div class="search-field">
+
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <circle cx="10.5" cy="10.5" r="6.5" />
+              <path
+                d="m16 16 4.5 4.5"
+                stroke-linecap="round"
+              />
+            </svg>
+
+            <input
+              type="search"
+              aria-label="Buscar socios por nombre o correo"
+              placeholder="Buscar por nombre o correo…"
+              [ngModel]="search()"
+              (ngModelChange)="search.set($event)"
+            />
+
+          </div>
+
+
+          @if (loadError()) {
+
+            <div
+              class="message message--error list-error"
+              role="alert"
+            >
+              <p>{{ loadError() }}</p>
 
               <button
                 type="button"
-                class="delete-button"
-                (click)="deletePartner(partner)"
+                class="text-button"
+                [disabled]="busy()"
+                (click)="loadPartners()"
               >
-                Eliminar
+                Reintentar
               </button>
-
             </div>
 
           }
 
-        </div>
 
-      }
+          @if (loading()) {
 
-    </article>
+            <div class="empty-state" role="status">
+              <span class="spinner" aria-hidden="true"></span>
 
-  </section>
+              <h3>Cargando tu equipo</h3>
 
-</main>
+              <p>Estamos consultando los socios registrados.</p>
+            </div>
+
+          } @else if (partners().length === 0 && loadError()) {
+
+            <div class="empty-state">
+              <h3>No pudimos mostrar el directorio</h3>
+              <p>Reintenta la carga para consultar tus socios.</p>
+            </div>
+
+          } @else if (partners().length === 0) {
+
+            <div class="empty-state">
+
+              <span class="empty-state__icon" aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <circle cx="9" cy="8" r="3" />
+                  <path
+                    d="M3 20v-2a6 6 0 0 1 12 0v2M19 8v6M16 11h6"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </span>
+
+              <h3>Tu equipo comienza aquí</h3>
+
+              <p>
+                Usa el formulario para registrar al primer socio
+                de tu inventario.
+              </p>
+
+            </div>
+
+          } @else if (filteredPartners().length === 0) {
+
+            <div class="empty-state">
+
+              <h3>No encontramos ese socio</h3>
+
+              <p>
+                Prueba con otro nombre o correo electrónico.
+              </p>
+
+              <button
+                type="button"
+                class="button button--secondary"
+                (click)="search.set('')"
+              >
+                Limpiar búsqueda
+              </button>
+
+            </div>
+
+          } @else {
+
+            <div class="list-meta" role="status">
+              <span>
+                {{ filteredPartners().length }}
+                {{
+                  filteredPartners().length === 1
+                    ? 'socio en el listado'
+                    : 'socios en el listado'
+                }}
+              </span>
+
+              @if (search()) {
+                <button
+                  type="button"
+                  class="text-button"
+                  (click)="search.set('')"
+                >
+                  Limpiar búsqueda
+                </button>
+              }
+            </div>
+
+
+            <ul class="partner-items">
+
+              @for (
+                partner of filteredPartners();
+                track partner.id
+              ) {
+
+                <li
+                  class="partner-card"
+                  [class.partner-card--deleting]="
+                    deletingPartnerId() === partner.id
+                  "
+                  [attr.aria-busy]="
+                    deletingPartnerId() === partner.id
+                  "
+                >
+
+                  <div class="partner-card__identity">
+
+                    <div
+                      class="partner-avatar"
+                      aria-hidden="true"
+                    >
+                      {{ initials(partner.name) }}
+                    </div>
+
+
+                    <div class="partner-card__details">
+
+                      <h3>{{ partner.name }}</h3>
+
+                      @if (partner.email) {
+
+                        <p class="partner-email">
+                          {{ partner.email }}
+                        </p>
+
+                      } @else {
+
+                        <p class="partner-email partner-email--empty">
+                          Sin correo registrado
+                        </p>
+
+                      }
+
+                    </div>
+
+                  </div>
+
+
+                  <button
+                    type="button"
+                    class="delete-button"
+                    [disabled]="busy()"
+                    [attr.aria-label]="'Eliminar a ' + partner.name"
+                    (click)="deletePartner(partner)"
+                  >
+
+                    @if (deletingPartnerId() === partner.id) {
+
+                      <span
+                        class="spinner spinner--small"
+                        aria-hidden="true"
+                      ></span>
+
+                      Eliminando…
+
+                    } @else {
+
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+
+                      Eliminar
+
+                    }
+
+                  </button>
+
+                </li>
+
+              }
+
+            </ul>
+
+          }
+
+        </section>
+
+      </div>
+
+    </div>
+
+  </main>
+
+</div>
