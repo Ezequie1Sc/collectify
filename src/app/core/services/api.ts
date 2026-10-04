@@ -36,14 +36,18 @@ import {
   EarningsResponse
 } from '../models/earnings';
 
+import {
+  AIRequest,
+  AIResponse
+} from '../models/ai';
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
 
-  private readonly http =
-    inject(HttpClient);
+  private readonly http = inject(HttpClient);
 
 
   // =========================================================
@@ -58,12 +62,6 @@ export class ApiService {
   // PRODUCTS
   // =========================================================
 
-  /**
-   * Obtiene todos los productos activos.
-   *
-   * El inventario es compartido entre
-   * todos los socios.
-   */
   getProducts(): Observable<ProductsResponse> {
 
     console.log(
@@ -73,7 +71,6 @@ export class ApiService {
     return this.http.get<ProductsResponse>(
       `${this.baseUrl}/products`
     );
-
   }
 
 
@@ -92,7 +89,6 @@ export class ApiService {
     return this.http.get<ProductsResponse>(
       `${this.baseUrl}/products/${ownerId}`
     );
-
   }
 
 
@@ -113,7 +109,6 @@ export class ApiService {
       `${this.baseUrl}/products`,
       product
     );
-
   }
 
 
@@ -136,7 +131,6 @@ export class ApiService {
       `${this.baseUrl}/products/${productId}`,
       product
     );
-
   }
 
 
@@ -166,7 +160,6 @@ export class ApiService {
     }>(
       `${this.baseUrl}/products/${productId}`
     );
-
   }
 
 
@@ -174,20 +167,6 @@ export class ApiService {
   // SALES
   // =========================================================
 
-  /**
-   * Registra una nueva venta.
-   *
-   * El backend:
-   *
-   * - valida el socio
-   * - valida los productos
-   * - valida el stock
-   * - calcula el total
-   * - registra la venta
-   * - registra los productos vendidos
-   * - actualiza el stock
-   * - genera el ticket
-   */
   createSale(
     sale: SaleCreate
   ): Observable<SaleResponse> {
@@ -205,7 +184,6 @@ export class ApiService {
       `${this.baseUrl}/sales`,
       sale
     );
-
   }
 
 
@@ -213,9 +191,6 @@ export class ApiService {
   // PARTNERS
   // =========================================================
 
-  /**
-   * Obtiene todos los socios.
-   */
   getPartners(): Observable<PartnersResponse> {
 
     console.log(
@@ -225,7 +200,6 @@ export class ApiService {
     return this.http.get<PartnersResponse>(
       `${this.baseUrl}/partners`
     );
-
   }
 
 
@@ -246,7 +220,6 @@ export class ApiService {
       `${this.baseUrl}/partners`,
       partner
     );
-
   }
 
 
@@ -269,7 +242,6 @@ export class ApiService {
       `${this.baseUrl}/partners/${partnerId}`,
       partner
     );
-
   }
 
 
@@ -299,7 +271,6 @@ export class ApiService {
     }>(
       `${this.baseUrl}/partners/${partnerId}`
     );
-
   }
 
 
@@ -307,17 +278,6 @@ export class ApiService {
   // EARNINGS
   // =========================================================
 
-  /**
-   * Obtiene:
-   *
-   * - ventas totales
-   * - costos totales
-   * - ganancias totales
-   * - número de transacciones
-   * - productos vendidos
-   * - ganancias por socio
-   * - información del cálculo
-   */
   getEarnings(): Observable<EarningsResponse> {
 
     console.log(
@@ -335,7 +295,52 @@ export class ApiService {
     return this.http.get<EarningsResponse>(
       url
     );
+  }
 
+
+  // =========================================================
+  // AI
+  // =========================================================
+
+  /**
+   * Envía una pregunta a Collectify AI.
+   *
+   * Backend:
+   *
+   * POST /ai/analyze
+   *
+   * Request:
+   * {
+   *   question: string
+   * }
+   *
+   * Response:
+   * {
+   *   question: string;
+   *   answer: string;
+   * }
+   */
+  analyzeWithAI(
+    question: string
+  ): Observable<AIResponse> {
+
+    console.log(
+      '[API] POST /ai/analyze'
+    );
+
+    const body: AIRequest = {
+      question
+    };
+
+    console.log(
+      '[API] Pregunta enviada:',
+      body
+    );
+
+    return this.http.post<AIResponse>(
+      `${this.baseUrl}/ai/analyze`,
+      body
+    );
   }
 
 }
