@@ -1,572 +1,522 @@
-<main class="sales">
+<div class="sales-layout">
+  <app-header />
 
-  <!-- ========================================= -->
-  <!-- HEADER -->
-  <!-- ========================================= -->
+  <main class="sales">
+    <div class="sales__container">
 
-  <section class="sales__header">
-
-    <div class="sales__header-content">
-
-      <span class="eyebrow">
-        COLLECTIFY
-      </span>
-
-      <h1>
-        Registrar venta
-      </h1>
-
-      <p>
-        Selecciona productos, agrega cantidades y genera el ticket.
-      </p>
-
-    </div>
-
-
-    <div class="sales__stats">
-
-      <div class="stat-card">
-
-        <span>
-          PRODUCTOS
-        </span>
-
-        <strong>
-          {{ cartQuantity() }}
-        </strong>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <span>
-          TOTAL
-        </span>
-
-        <strong>
-          ${{ cartTotal().toFixed(2) }}
-        </strong>
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- ========================================= -->
-  <!-- MENSAJE DE ERROR -->
-  <!-- ========================================= -->
-
-  @if (error()) {
-
-    <div class="sales__message sales__message--error">
-
-      {{ error() }}
-
-    </div>
-
-  }
-
-
-  <!-- ========================================= -->
-  <!-- VENTA REGISTRADA -->
-  <!-- ========================================= -->
-
-  @if (sale(); as registeredSale) {
-
-    <div class="sales__message sales__message--success">
-
-      Venta registrada correctamente.
-      Ticket #{{ registeredSale.sale.ticket_number }}.
-
-    </div>
-
-  }
-
-
-  <!-- ========================================= -->
-  <!-- CONTENIDO -->
-  <!-- ========================================= -->
-
-  <section class="sales__content">
-
-
-    <!-- ======================================= -->
-    <!-- INVENTARIO -->
-    <!-- ======================================= -->
-
-    <section class="inventory">
-
-      <div class="section-heading">
-
+      <!-- CABECERA -->
+      <header class="sales__header">
         <div>
+          <span class="eyebrow">COLLECTIFY / VENTAS</span>
 
-          <span class="eyebrow">
-            INVENTARIO
-          </span>
-
-          <h2>
-            Productos
-          </h2>
-
-        </div>
-
-
-        <span class="product-count">
-          {{ filteredProducts().length }}
-        </span>
-
-      </div>
-
-
-      <!-- ===================================== -->
-      <!-- BUSCADOR -->
-      <!-- ===================================== -->
-
-      <div class="search">
-
-        <input
-          type="text"
-          placeholder="Buscar producto, categoría o SKU..."
-          [ngModel]="search()"
-          (ngModelChange)="onSearchChange($event)"
-        />
-
-      </div>
-
-
-      <!-- ===================================== -->
-      <!-- LOADING -->
-      <!-- ===================================== -->
-
-      @if (loading()) {
-
-        <div class="inventory__message">
+          <h1>Registrar venta<span>.</span></h1>
 
           <p>
-            Cargando productos...
+            Selecciona tus productos y prepara el ticket
+            en un solo lugar.
           </p>
-
         </div>
-
-      }
-
-
-      <!-- ===================================== -->
-      <!-- ERROR -->
-      <!-- ===================================== -->
-
-      @else if (error() && products().length === 0) {
-
-        <div class="inventory__message inventory__message--error">
-
-          <p>
-            No se pudieron cargar los productos.
-          </p>
-
-          <button
-            type="button"
-            (click)="loadProducts()"
-          >
-            Intentar nuevamente
-          </button>
-
-        </div>
-
-      }
-
-
-      <!-- ===================================== -->
-      <!-- SIN PRODUCTOS -->
-      <!-- ===================================== -->
-
-      @else if (filteredProducts().length === 0) {
-
-        <div class="inventory__message">
-
-          <div class="inventory__empty-icon">
-            +
-          </div>
-
-          <h3>
-            No hay productos
-          </h3>
-
-          <p>
-            No encontramos productos que coincidan con tu búsqueda.
-          </p>
-
-        </div>
-
-      }
-
-
-      <!-- ===================================== -->
-      <!-- LISTA DE PRODUCTOS -->
-      <!-- ===================================== -->
-
-      @else {
-
-        <div class="products-list">
-
-          @for (
-            product of filteredProducts();
-            track product.id
-          ) {
-
-            <article class="product-item">
-
-              <!-- ============================= -->
-              <!-- INFORMACIÓN -->
-              <!-- ============================= -->
-
-              <div class="product-item__info">
-
-                @if (product.category) {
-
-                  <span class="product-item__category">
-                    {{ product.category }}
-                  </span>
-
-                }
-
-                <h3>
-                  {{ product.name }}
-                </h3>
-
-                @if (product.sku) {
-
-                  <p class="product-item__sku">
-                    SKU: {{ product.sku }}
-                  </p>
-
-                }
-
-              </div>
-
-
-              <!-- ============================= -->
-              <!-- PRECIO / STOCK -->
-              <!-- ============================= -->
-
-              <div class="product-item__details">
-
-                <span
-                  class="product-item__stock"
-                  [class.product-item__stock--empty]="
-                    product.stock === 0
-                  "
-                >
-                  {{ product.stock }}
-                  disponibles
-                </span>
-
-                <strong>
-                  ${{ product.price.toFixed(2) }}
-                </strong>
-
-              </div>
-
-
-              <!-- ============================= -->
-              <!-- BOTÓN -->
-              <!-- ============================= -->
-
-              <button
-                type="button"
-                class="product-item__add"
-                [disabled]="
-                  product.stock === 0 ||
-                  getCartQuantity(product.id) >= product.stock
-                "
-                (click)="addToCart(product)"
-              >
-
-                @if (product.stock === 0) {
-
-                  Agotado
-
-                } @else if (
-                  getCartQuantity(product.id) >= product.stock
-                ) {
-
-                  Máximo
-
-                } @else {
-
-                  Agregar
-
-                }
-
-              </button>
-
-            </article>
-
-          }
-
-        </div>
-
-      }
-
-    </section>
-
-
-    <!-- ========================================= -->
-    <!-- TICKET -->
-    <!-- ========================================= -->
-
-    <aside class="ticket">
-
-      <div class="section-heading">
-
-        <div>
-
-          <span class="eyebrow">
-            VENTA
-          </span>
-
-          <h2>
-            @if (sale(); as registeredSale) {
-
-              Ticket #{{ registeredSale.sale.ticket_number }}
-
-            } @else {
-
-              Ticket
-
-            }
-          </h2>
-
-        </div>
-
-
-        @if (hasItems()) {
-
-          <button
-            type="button"
-            class="ticket__clear"
-            (click)="clearCart()"
-          >
-            Vaciar
-          </button>
-
-        }
-
-      </div>
-
-
-      <!-- ===================================== -->
-      <!-- TICKET VACÍO -->
-      <!-- ===================================== -->
-
-      @if (!hasItems() && !sale()) {
-
-        <div class="ticket__empty">
-
-          <div class="ticket__empty-icon">
-            +
-          </div>
-
-          <h3>
-            Ticket vacío
-          </h3>
-
-          <p>
-            Agrega productos desde el inventario
-            para comenzar la venta.
-          </p>
-
-        </div>
-
-      }
-
-
-      <!-- ===================================== -->
-      <!-- PRODUCTOS DEL TICKET -->
-      <!-- ===================================== -->
-
-      @if (hasItems()) {
-
-        <div class="ticket__items">
-
-          @for (
-            item of cart();
-            track item.product.id
-          ) {
-
-            <div class="ticket-item">
-
-              <div class="ticket-item__info">
-
-                <h3>
-                  {{ item.product.name }}
-                </h3>
-
-                <span>
-                  ${{ item.product.price.toFixed(2) }}
-                  c/u
-                </span>
-
-              </div>
-
-
-              <button
-                type="button"
-                class="ticket-item__remove"
-                (click)="removeFromCart(item.product.id)"
-                aria-label="Eliminar producto"
-              >
-                ×
-              </button>
-
-
-              <div class="ticket-item__bottom">
-
-                <div class="quantity">
-
-                  <button
-                    type="button"
-                    (click)="decreaseQuantity(item.product.id)"
-                    aria-label="Disminuir cantidad"
-                  >
-                    −
-                  </button>
-
-                  <span>
-                    {{ item.quantity }}
-                  </span>
-
-                  <button
-                    type="button"
-                    [disabled]="
-                      item.quantity >= item.product.stock
-                    "
-                    (click)="increaseQuantity(item.product.id)"
-                    aria-label="Aumentar cantidad"
-                  >
-                    +
-                  </button>
-
-                </div>
-
-
-                <strong>
-                  ${{
-                    (
-                      item.product.price *
-                      item.quantity
-                    ).toFixed(2)
-                  }}
-                </strong>
-
-              </div>
-
-            </div>
-
-          }
-
-        </div>
-
-
-        <!-- =================================== -->
-        <!-- TOTAL -->
-        <!-- =================================== -->
-
-        <div class="ticket__summary">
-
-          <div>
-
-            <span>
-              TOTAL
-            </span>
-
-            <strong>
-              ${{ cartTotal().toFixed(2) }}
-            </strong>
-
-          </div>
-
-        </div>
-
-
-        <!-- =================================== -->
-        <!-- REGISTRAR -->
-        <!-- =================================== -->
 
         <button
           type="button"
-          class="ticket__submit"
-          (click)="registerSale()"
+          class="button button--glass"
+          [disabled]="loading() || submitting()"
+          (click)="loadProducts()"
         >
-          Registrar venta
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            [class.is-spinning]="loading()"
+          >
+            <path d="M20 7v5h-5M4 17v-5h5" />
+            <path d="M6 7a7 7 0 0 1 12-1l2 3M4 15l2 3a7 7 0 0 0 12-1" />
+          </svg>
+
+          {{ loading() ? 'Actualizando…' : 'Actualizar stock' }}
         </button>
+      </header>
 
-      }
-
-
-      <!-- ===================================== -->
-      <!-- VENTA REGISTRADA -->
-      <!-- ===================================== -->
-
-      @if (sale(); as registeredSale) {
-
-        <div class="ticket__registered">
-
-          <div class="ticket__registered-row">
-
-            <span>
-              Total
-            </span>
-
-            <strong>
-              ${{ registeredSale.summary.total.toFixed(2) }}
-            </strong>
-
-          </div>
-
-
-          <div class="ticket__registered-row">
-
-            <span>
-              Costo
-            </span>
-
-            <strong>
-              ${{ registeredSale.summary.cost.toFixed(2) }}
-            </strong>
-
-          </div>
-
-
-          <div class="ticket__registered-row">
-
-            <span>
-              Ganancia
-            </span>
-
-            <strong>
-              ${{ registeredSale.summary.profit.toFixed(2) }}
-            </strong>
-
-          </div>
-
+      <!-- ERRORES -->
+      @if (loadError()) {
+        <div class="notice notice--error" role="alert">
+          <span>{{ loadError() }}</span>
 
           <button
             type="button"
-            class="ticket__new-sale"
-            (click)="newSale()"
+            [disabled]="loading() || submitting()"
+            (click)="loadProducts()"
           >
-            Nueva venta
+            Reintentar
           </button>
-
         </div>
-
       }
 
-    </aside>
+      @if (error()) {
+        <div class="notice notice--error" role="alert">
+          <span>{{ error() }}</span>
 
-  </section>
+          <button
+            type="button"
+            aria-label="Cerrar mensaje"
+            (click)="error.set('')"
+          >
+            ×
+          </button>
+        </div>
+      }
 
-</main>
+      @if (sale(); as registeredSale) {
+        <div class="notice notice--success" role="status">
+          <span>
+            Venta registrada.
+            Ticket #{{ registeredSale.sale.ticket_number }}.
+          </span>
+        </div>
+      }
+
+      <!-- RESUMEN DEL TICKET ACTUAL -->
+      @if (!sale()) {
+        <section class="sale-overview" aria-label="Resumen del ticket">
+          <article class="stat-card">
+            <span class="stat-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="m12 3 9 5-9 5-9-5 9-5Z" />
+                <path d="M3 8v9l9 5 9-5V8M12 13v9" />
+              </svg>
+            </span>
+
+            <div>
+              <span class="stat-card__label">Productos distintos</span>
+              <strong>{{ cart().length }}</strong>
+            </div>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 7h16v14H4zM8 7V5a4 4 0 0 1 8 0v2" />
+              </svg>
+            </span>
+
+            <div>
+              <span class="stat-card__label">Unidades en el ticket</span>
+              <strong>{{ cartQuantity() }}</strong>
+            </div>
+          </article>
+
+          <article class="stat-card stat-card--dark">
+            <span class="stat-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
+                <path d="M9 7h6M9 11h6M9 15h3" />
+              </svg>
+            </span>
+
+            <div>
+              <span class="stat-card__label">Total del ticket</span>
+              <strong>{{ formatCurrency(cartTotal()) }}</strong>
+            </div>
+          </article>
+        </section>
+      }
+
+      <div class="sales__content">
+
+        <!-- INVENTARIO -->
+        <section
+          class="inventory glass-panel"
+          aria-labelledby="inventory-title"
+          [attr.aria-busy]="loading()"
+        >
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">CATÁLOGO</span>
+              <h2 id="inventory-title">Elige tus productos</h2>
+            </div>
+
+            <span class="count-badge">
+              {{ filteredProducts().length }}
+            </span>
+          </div>
+
+          <label class="search">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.5" cy="10.5" r="6.5" />
+              <path d="m16 16 5 5" />
+            </svg>
+
+            <input
+              type="search"
+              placeholder="Nombre, categoría o SKU…"
+              aria-label="Buscar productos por nombre, categoría o SKU"
+              [ngModel]="search()"
+              (ngModelChange)="onSearchChange($event)"
+            />
+          </label>
+
+          <div class="inventory__context">
+            <span>Precios en MXN</span>
+
+            @if (search()) {
+              <button
+                type="button"
+                class="text-button"
+                (click)="onSearchChange('')"
+              >
+                Limpiar búsqueda
+              </button>
+            }
+          </div>
+
+          @if (sale()) {
+            <div class="inventory__hint">
+              Selecciona “Nueva venta” en el ticket para continuar.
+            </div>
+          }
+
+          @if (loading()) {
+            <div class="state-message" role="status">
+              <span class="loader" aria-hidden="true"></span>
+              <h3>Consultando inventario</h3>
+              <p>Estamos actualizando productos y existencias.</p>
+            </div>
+          } @else if (loadError() && products().length === 0) {
+            <div class="state-message">
+              <h3>No se pudo cargar el catálogo</h3>
+              <p>Vuelve a consultar el inventario para continuar.</p>
+
+              <button
+                type="button"
+                class="button button--dark"
+                (click)="loadProducts()"
+              >
+                Reintentar
+              </button>
+            </div>
+          } @else if (filteredProducts().length === 0) {
+            <div class="state-message">
+              <span class="state-message__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="m12 3 9 5-9 5-9-5 9-5Z" />
+                  <path d="M3 8v9l9 5 9-5V8M12 13v9" />
+                </svg>
+              </span>
+
+              <h3>
+                {{ search() ? 'Sin coincidencias' : 'Tu catálogo está vacío' }}
+              </h3>
+
+              <p>
+                {{
+                  search()
+                    ? 'Prueba con otro nombre, categoría o SKU.'
+                    : 'Registra productos en el dashboard para comenzar a vender.'
+                }}
+              </p>
+            </div>
+          } @else {
+            <div class="products-list">
+              @for (product of filteredProducts(); track product.id) {
+                <article
+                  class="product-item"
+                  [class.product-item--selected]="isInCart(product.id)"
+                  [class.product-item--empty]="stockOf(product) === 0"
+                >
+                  <div class="product-item__info">
+                    @if (product.category) {
+                      <span class="product-item__category">
+                        {{ product.category }}
+                      </span>
+                    }
+
+                    <h3>{{ product.name }}</h3>
+
+                    @if (product.sku) {
+                      <p class="product-item__sku">
+                        SKU: {{ product.sku }}
+                      </p>
+                    }
+
+                    <div class="product-item__meta">
+                      <span
+                        class="stock-status"
+                        [class.stock-status--empty]="stockOf(product) === 0"
+                      >
+                        <span aria-hidden="true"></span>
+
+                        {{
+                          stockOf(product) > 0
+                            ? stockOf(product) + ' en stock'
+                            : 'Sin existencias'
+                        }}
+                      </span>
+
+                      @if (isInCart(product.id)) {
+                        <span class="selected-badge">
+                          {{ getCartQuantity(product.id) }} en ticket
+                        </span>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="product-item__purchase">
+                    <strong>{{ formatCurrency(product.price) }}</strong>
+                    <span>por unidad</span>
+
+                    <button
+                      type="button"
+                      class="button product-item__add"
+                      [attr.aria-label]="'Agregar ' + product.name + ' al ticket'"
+                      [disabled]="
+                        submitting() ||
+                        sale() !== null ||
+                        !!loadError() ||
+                        stockOf(product) === 0 ||
+                        getCartQuantity(product.id) >= stockOf(product)
+                      "
+                      (click)="addToCart(product)"
+                    >
+                      @if (stockOf(product) === 0) {
+                        Agotado
+                      } @else if (
+                        getCartQuantity(product.id) >= stockOf(product)
+                      ) {
+                        Máximo
+                      } @else {
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M12 5v14M5 12h14" />
+                        </svg>
+                        Agregar
+                      }
+                    </button>
+                  </div>
+                </article>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- TICKET -->
+        <aside
+          class="ticket glass-panel"
+          aria-labelledby="ticket-title"
+          [attr.aria-busy]="submitting()"
+        >
+          <div class="ticket__heading">
+            <div class="ticket__heading-copy">
+              <span class="ticket__symbol" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
+                  <path d="M9 7h6M9 11h6M9 15h3" />
+                </svg>
+              </span>
+
+              <div>
+                <span class="eyebrow">RESUMEN DE VENTA</span>
+
+                <h2 id="ticket-title">
+                  @if (sale(); as registeredSale) {
+                    Ticket #{{ registeredSale.sale.ticket_number }}
+                  } @else {
+                    Tu ticket
+                  }
+                </h2>
+              </div>
+            </div>
+
+            @if (hasItems() && !sale()) {
+              <button
+                type="button"
+                class="ticket__clear"
+                [disabled]="submitting()"
+                (click)="clearCart()"
+              >
+                Vaciar
+              </button>
+            }
+          </div>
+
+          @if (sale(); as registeredSale) {
+            <!-- VENTA COMPLETADA -->
+            <div class="ticket__registered">
+              <span class="success-symbol" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="m5 12 4 4L19 6" />
+                </svg>
+              </span>
+
+              <h3>Venta registrada</h3>
+              <p>El ticket fue generado correctamente.</p>
+
+              <div class="registered-total">
+                <span>Total de la venta</span>
+                <strong>
+                  {{ formatCurrency(registeredSale.summary.total) }}
+                </strong>
+              </div>
+
+              <div class="registered-row">
+                <span>Costo</span>
+                <strong>
+                  {{ formatCurrency(registeredSale.summary.cost) }}
+                </strong>
+              </div>
+
+              <div class="registered-row">
+                <span>Ganancia</span>
+                <strong>
+                  {{ formatCurrency(registeredSale.summary.profit) }}
+                </strong>
+              </div>
+
+              <button
+                type="button"
+                class="button button--dark ticket__submit"
+                [disabled]="loading()"
+                (click)="newSale()"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+
+                Nueva venta
+              </button>
+            </div>
+          } @else if (!hasItems()) {
+            <!-- VACÍO -->
+            <div class="state-message ticket__empty">
+              <span class="state-message__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 7h16v14H4zM8 7V5a4 4 0 0 1 8 0v2" />
+                  <path d="M9 14h6M12 11v6" />
+                </svg>
+              </span>
+
+              <h3>Comienza una venta</h3>
+
+              <p>
+                Agrega productos del catálogo.
+                Aquí podrás ajustar sus cantidades.
+              </p>
+            </div>
+          } @else {
+            <!-- CARRITO -->
+            <div class="ticket__items">
+              @for (item of cart(); track item.product.id) {
+                <article class="ticket-item">
+                  <div class="ticket-item__top">
+                    <div>
+                      <h3>{{ item.product.name }}</h3>
+                      <p>
+                        {{ formatCurrency(item.product.price) }} por unidad
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      class="ticket-item__remove"
+                      [disabled]="submitting()"
+                      [attr.aria-label]="'Quitar ' + item.product.name"
+                      (click)="removeFromCart(item.product.id)"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="m6 6 12 12M18 6 6 18" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div class="ticket-item__bottom">
+                    <div class="quantity">
+                      <button
+                        type="button"
+                        [disabled]="submitting()"
+                        [attr.aria-label]="'Disminuir cantidad de ' + item.product.name"
+                        (click)="decreaseQuantity(item.product.id)"
+                      >
+                        −
+                      </button>
+
+                      <span>{{ item.quantity }}</span>
+
+                      <button
+                        type="button"
+                        [disabled]="
+                          submitting() ||
+                          loading() ||
+                          !!loadError() ||
+                          item.quantity >= stockOf(item.product)
+                        "
+                        [attr.aria-label]="'Aumentar cantidad de ' + item.product.name"
+                        (click)="increaseQuantity(item.product.id)"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <strong>
+                      {{
+                        formatCurrency(
+                          item.product.price * item.quantity
+                        )
+                      }}
+                    </strong>
+                  </div>
+                </article>
+              }
+            </div>
+
+            @if (cartIssue()) {
+              <p class="ticket__warning" role="alert">
+                {{ cartIssue() }}
+              </p>
+            }
+
+            <div class="ticket__summary">
+              <div class="ticket__summary-row">
+                <span>Productos distintos</span>
+                <strong>{{ cart().length }}</strong>
+              </div>
+
+              <div class="ticket__summary-row">
+                <span>Unidades</span>
+                <strong>{{ cartQuantity() }}</strong>
+              </div>
+
+              <div class="ticket__total">
+                <div>
+                  <span>Total a registrar</span>
+                  <small>MXN</small>
+                </div>
+
+                <strong>{{ formatCurrency(cartTotal()) }}</strong>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="button button--dark ticket__submit"
+              [disabled]="!canRegister()"
+              (click)="registerSale()"
+            >
+              @if (submitting()) {
+                <span class="loader loader--small" aria-hidden="true"></span>
+                Registrando…
+              } @else {
+                Registrar venta
+
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h14m-6-6 6 6-6 6" />
+                </svg>
+              }
+            </button>
+
+            <p class="ticket__note">
+              Cada ticket corresponde a productos de un mismo socio.
+            </p>
+          }
+        </aside>
+
+      </div>
+    </div>
+  </main>
+</div>
