@@ -1,545 +1,567 @@
-<div class="earnings-page">
+<div class="earnings-shell">
 
-  <!-- =====================================================
-       HEADER
-       ===================================================== -->
+  <app-header />
 
-  <header class="page-header">
+  <main class="earnings">
 
-    <div class="header-content">
+    <div class="earnings__container">
 
-      <div class="header-icon">
-        $
-      </div>
+      <!-- ENCABEZADO -->
 
-      <div class="header-text">
-        <span class="eyebrow">
-          FINANZAS
-        </span>
-
-        <h1>
-          Ganancias
-        </h1>
-
-        <p>
-          Consulta las ventas, costos y ganancias generadas
-          por el inventario.
-        </p>
-      </div>
-
-    </div>
-
-    <button
-      type="button"
-      class="refresh-button"
-      [disabled]="loading"
-      (click)="refresh()"
-    >
-      <span
-        class="refresh-icon"
-        [class.spinning]="loading"
-      >
-        ↻
-      </span>
-
-      <span>
-        {{ loading ? 'Actualizando...' : 'Actualizar' }}
-      </span>
-    </button>
-
-  </header>
-
-
-  <!-- =====================================================
-       ERROR
-       ===================================================== -->
-
-  <div
-    *ngIf="error"
-    class="error-message"
-  >
-
-    <div class="error-icon">
-      !
-    </div>
-
-    <div>
-      <strong>
-        No se pudieron cargar las ganancias
-      </strong>
-
-      <p>
-        {{ error }}
-      </p>
-    </div>
-
-  </div>
-
-
-  <!-- =====================================================
-       LOADING
-       ===================================================== -->
-
-  <div
-    *ngIf="loading"
-    class="loading-state"
-  >
-
-    <div class="loading-spinner"></div>
-
-    <p>
-      Cargando información de ganancias...
-    </p>
-
-  </div>
-
-
-  <!-- =====================================================
-       CONTENT
-       ===================================================== -->
-
-  <ng-container *ngIf="!loading && earnings">
-
-    <!-- ===================================================
-         SUMMARY CARDS
-         =================================================== -->
-
-    <section class="summary-section">
-
-      <div class="summary-grid">
-
-        <!-- TOTAL SALES -->
-
-        <article class="summary-card sales-card">
-
-          <div class="card-top">
-
-            <div class="card-icon">
-              $
-            </div>
-
-            <span class="card-label">
-              Ventas totales
-            </span>
-
-          </div>
-
-          <div class="card-value">
-            {{ formatCurrency(summary?.total_sales ?? 0) }}
-          </div>
-
-          <p class="card-description">
-            Ingresos generados
-          </p>
-
-        </article>
-
-
-        <!-- COST -->
-
-        <article class="summary-card cost-card">
-
-          <div class="card-top">
-
-            <div class="card-icon">
-              $
-            </div>
-
-            <span class="card-label">
-              Costos
-            </span>
-
-          </div>
-
-          <div class="card-value">
-            {{ formatCurrency(summary?.total_cost ?? 0) }}
-          </div>
-
-          <p class="card-description">
-            Costo de productos vendidos
-          </p>
-
-        </article>
-
-
-        <!-- PROFIT -->
-
-        <article class="summary-card profit-card">
-
-          <div class="card-top">
-
-            <div class="card-icon">
-              ↑
-            </div>
-
-            <span class="card-label">
-              Ganancia total
-            </span>
-
-          </div>
-
-          <div class="card-value">
-            {{ formatCurrency(summary?.total_profit ?? 0) }}
-          </div>
-
-          <p class="card-description">
-            Ganancia estimada
-          </p>
-
-        </article>
-
-
-        <!-- TRANSACTIONS -->
-
-        <article class="summary-card transactions-card">
-
-          <div class="card-top">
-
-            <div class="card-icon">
-              #
-            </div>
-
-            <span class="card-label">
-              Transacciones
-            </span>
-
-          </div>
-
-          <div class="card-value">
-            {{ summary?.total_transactions ?? 0 }}
-          </div>
-
-          <p class="card-description">
-            Ventas registradas
-          </p>
-
-        </article>
-
-      </div>
-
-
-      <!-- =================================================
-           QUICK METRICS
-           ================================================= -->
-
-      <div class="quick-metrics">
-
-        <div class="quick-metric">
-
-          <span class="metric-label">
-            Productos vendidos
-          </span>
-
-          <strong>
-            {{ summary?.total_items_sold ?? 0 }}
-          </strong>
-
-        </div>
-
-
-        <div class="metric-divider"></div>
-
-
-        <div class="quick-metric">
-
-          <span class="metric-label">
-            Margen de ganancia
-          </span>
-
-          <strong>
-            {{
-              getProfitMargin(
-                summary?.total_sales ?? 0,
-                summary?.total_profit ?? 0
-              ) | number:'1.1-1'
-            }}%
-          </strong>
-
-        </div>
-
-
-        <div class="metric-divider"></div>
-
-
-        <div class="quick-metric">
-
-          <span class="metric-label">
-            Socios con ventas
-          </span>
-
-          <strong>
-            {{ activePartners.length }}
-          </strong>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- ===================================================
-         PARTNERS
-         =================================================== -->
-
-    <section class="partners-section">
-
-      <div class="section-header">
+      <header class="page-heading">
 
         <div>
+          <span class="eyebrow">COLLECTIFY / FINANZAS</span>
 
-          <span class="section-eyebrow">
-            DESGLOSE
-          </span>
-
-          <h2>
-            Ganancias por socio
-          </h2>
+          <h1>
+            Tus resultados,
+            <span>más claros.</span>
+          </h1>
 
           <p>
-            Consulta cuánto ha generado cada socio
-            mediante sus productos vendidos.
+            Consulta tus ventas, sus costos y las ganancias
+            reportadas por cada socio.
+          </p>
+        </div>
+
+        <div class="page-heading__actions">
+
+          <button
+            type="button"
+            class="button button--secondary"
+            [disabled]="loading"
+            (click)="refresh()"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              [class.spinning]="loading"
+              aria-hidden="true"
+            >
+              <path
+                d="M20 7v5h-5M4 17v-5h5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17"
+                stroke-linecap="round"
+              />
+            </svg>
+
+            {{ loading ? 'Actualizando…' : 'Actualizar datos' }}
+          </button>
+
+          @if (lastUpdated) {
+            <span class="updated-at">
+              Última consulta:
+              {{ lastUpdated | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+          }
+
+        </div>
+
+      </header>
+
+
+      <!-- ERRORES -->
+
+      @if (error) {
+
+        <div class="notice notice--error" role="alert">
+
+          <div>
+            <strong>No pudimos actualizar la información</strong>
+            <p>{{ error }}</p>
+
+            @if (earnings) {
+              <p>Se muestran los datos de la última consulta exitosa.</p>
+            }
+          </div>
+
+          <button
+            type="button"
+            class="button button--secondary"
+            [disabled]="loading"
+            (click)="refresh()"
+          >
+            Reintentar
+          </button>
+
+        </div>
+
+      }
+
+
+      <!-- PRIMERA CARGA -->
+
+      @if (loading && !earnings) {
+
+        <section class="empty-state glass-panel" role="status">
+
+          <span class="spinner" aria-hidden="true"></span>
+
+          <h2>Preparando tus resultados</h2>
+
+          <p>
+            Estamos consultando las ventas y las ganancias
+            de tu inventario.
+          </p>
+
+        </section>
+
+      }
+
+
+      @if (earnings) {
+
+        <div
+          class="earnings-content"
+          [attr.aria-busy]="loading"
+        >
+
+          <!-- RESUMEN -->
+
+          <section
+            class="summary-grid"
+            aria-label="Resumen financiero"
+          >
+
+            <article class="metric-card glass-panel">
+              <div class="metric-card__heading">
+                <span class="metric-symbol" aria-hidden="true">↗</span>
+                <span>Ventas totales</span>
+              </div>
+
+              <strong>{{ formatCurrency(totalSales) }}</strong>
+
+              <p>Importe de ventas reportado</p>
+            </article>
+
+
+            <article class="metric-card glass-panel">
+              <div class="metric-card__heading">
+                <span
+                  class="metric-symbol metric-symbol--cost"
+                  aria-hidden="true"
+                >
+                  −
+                </span>
+
+                <span>Costos totales</span>
+              </div>
+
+              <strong>{{ formatCurrency(totalCost) }}</strong>
+
+              <p>Costo de los productos vendidos</p>
+            </article>
+
+
+            <article
+              class="metric-card metric-card--featured"
+              [class.metric-card--loss]="totalProfit < 0"
+            >
+              <div class="metric-card__heading">
+                <span class="metric-symbol" aria-hidden="true">
+                  {{ totalProfit < 0 ? '↘' : '↗' }}
+                </span>
+
+                <span>Ganancia total</span>
+              </div>
+
+              <strong>{{ formatCurrency(totalProfit) }}</strong>
+
+              <p>
+                {{
+                  totalProfit < 0
+                    ? 'El resultado reportado es negativo'
+                    : 'Resultado reportado de tus ventas'
+                }}
+              </p>
+            </article>
+
+
+            <article class="metric-card glass-panel">
+              <div class="metric-card__heading">
+                <span class="metric-symbol" aria-hidden="true">#</span>
+                <span>Transacciones</span>
+              </div>
+
+              <strong>{{ totalTransactions | number:'1.0-0' }}</strong>
+
+              <p>Ventas registradas</p>
+            </article>
+
+          </section>
+
+
+          <!-- ANÁLISIS -->
+
+          <div class="analysis-grid">
+
+            <section
+              class="financial-chart glass-panel"
+              aria-labelledby="financial-chart-title"
+            >
+
+              <div class="section-heading">
+                <span class="eyebrow">RESUMEN VISUAL</span>
+
+                <h2 id="financial-chart-title">
+                  Así se ven tus resultados
+                </h2>
+
+                <p>
+                  Comparación de importes reportados en pesos mexicanos.
+                </p>
+              </div>
+
+
+              @if (hasFinancialValues) {
+
+                <div class="chart-rows">
+
+                  @for (bar of financialBars; track bar.type) {
+
+                    <div class="chart-row">
+
+                      <div class="chart-row__heading">
+                        <span>
+                          <i
+                            class="chart-dot"
+                            [class.chart-dot--cost]="bar.type === 'cost'"
+                            [class.chart-dot--profit]="bar.type === 'profit'"
+                            aria-hidden="true"
+                          ></i>
+
+                          {{ bar.label }}
+                        </span>
+
+                        <strong [class.negative]="bar.value < 0">
+                          {{ formatCurrency(bar.value) }}
+                        </strong>
+                      </div>
+
+                      <div
+                        class="chart-track"
+                        [class.chart-track--diverging]="hasNegativeValues"
+                        aria-hidden="true"
+                      >
+                        <span
+                          class="chart-fill"
+                          [class.chart-fill--cost]="bar.type === 'cost'"
+                          [class.chart-fill--profit]="bar.type === 'profit'"
+                          [class.chart-fill--negative]="bar.value < 0"
+                          [style.width.%]="barWidth(bar.value)"
+                          [style.left.%]="barLeft(bar.value)"
+                        ></span>
+                      </div>
+
+                    </div>
+
+                  }
+
+                </div>
+
+                <div class="chart-axis" aria-hidden="true">
+                  <span>
+                    {{
+                      hasNegativeValues
+                        ? formatCurrency(-chartMaximum)
+                        : formatCurrency(0)
+                    }}
+                  </span>
+
+                  @if (hasNegativeValues) {
+                    <span>0</span>
+                  }
+
+                  <span>{{ formatCurrency(chartMaximum) }}</span>
+                </div>
+
+              } @else {
+
+                <div class="chart-empty">
+                  <span aria-hidden="true">↗</span>
+                  <h3>Aún no hay importes para comparar</h3>
+                  <p>
+                    La gráfica se actualizará cuando la consulta
+                    incluya ventas, costos o ganancias.
+                  </p>
+                </div>
+
+              }
+
+            </section>
+
+
+            <section
+              class="activity-panel glass-panel"
+              aria-labelledby="activity-title"
+            >
+
+              <div class="section-heading">
+                <span class="eyebrow">EN DETALLE</span>
+
+                <h2 id="activity-title">Actividad de ventas</h2>
+
+                <p>Indicadores calculados con el resumen recibido.</p>
+              </div>
+
+
+              <dl class="activity-list">
+
+                <div>
+                  <dt>
+                    <span>Margen de ganancia</span>
+                    <small>Ganancia respecto a las ventas</small>
+                  </dt>
+
+                  <dd [class.negative]="(profitMargin ?? 0) < 0">
+                    {{
+                      profitMargin === null
+                        ? '—'
+                        : (profitMargin | number:'1.1-1') + '%'
+                    }}
+                  </dd>
+                </div>
+
+
+                <div>
+                  <dt>
+                    <span>Ticket promedio</span>
+                    <small>Ventas divididas entre transacciones</small>
+                  </dt>
+
+                  <dd>
+                    {{
+                      averageTicket === null
+                        ? '—'
+                        : formatCurrency(averageTicket)
+                    }}
+                  </dd>
+                </div>
+
+
+                <div>
+                  <dt>
+                    <span>Unidades vendidas</span>
+                    <small>Cantidad de productos reportada</small>
+                  </dt>
+
+                  <dd>{{ totalItemsSold | number:'1.0-0' }}</dd>
+                </div>
+
+
+                <div>
+                  <dt>
+                    <span>Socios con ventas</span>
+                    <small>Con transacciones o unidades vendidas</small>
+                  </dt>
+
+                  <dd>{{ partnersWithSales }}</dd>
+                </div>
+
+              </dl>
+
+            </section>
+
+          </div>
+
+
+          <!-- SOCIOS -->
+
+          <section
+            class="partners-section glass-panel"
+            aria-labelledby="partners-title"
+          >
+
+            <div class="partners-toolbar">
+
+              <div class="section-heading">
+                <span class="eyebrow">DESGLOSE POR SOCIO</span>
+
+                <h2 id="partners-title">
+                  Cada socio, sus resultados
+                </h2>
+
+                <p>
+                  Ordenados de mayor a menor ganancia reportada.
+                </p>
+              </div>
+
+
+              <label class="search-field">
+
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <circle cx="10.5" cy="10.5" r="6.5" />
+                  <path d="m16 16 4.5 4.5" stroke-linecap="round" />
+                </svg>
+
+                <input
+                  type="search"
+                  aria-label="Buscar socio por nombre o correo"
+                  placeholder="Buscar socio…"
+                  [(ngModel)]="search"
+                />
+
+              </label>
+
+            </div>
+
+
+            @if (partners.length === 0) {
+
+              <div class="empty-state empty-state--compact">
+                <h3>Sin desglose de socios</h3>
+
+                <p>
+                  Aquí aparecerán los resultados por socio
+                  cuando estén disponibles.
+                </p>
+              </div>
+
+            } @else if (filteredPartners.length === 0) {
+
+              <div class="empty-state empty-state--compact">
+                <h3>No encontramos coincidencias</h3>
+                <p>Prueba con otro nombre o correo electrónico.</p>
+
+                <button
+                  type="button"
+                  class="button button--secondary"
+                  (click)="search = ''"
+                >
+                  Limpiar búsqueda
+                </button>
+              </div>
+
+            } @else {
+
+              <div class="list-meta" role="status">
+                {{ filteredPartners.length }}
+                {{
+                  filteredPartners.length === 1
+                    ? 'socio encontrado'
+                    : 'socios encontrados'
+                }}
+              </div>
+
+
+              <div class="partners-grid">
+
+                @for (partner of filteredPartners; track partner) {
+
+                  <article class="partner-card">
+
+                    <div class="partner-card__header">
+
+                      <span class="partner-avatar" aria-hidden="true">
+                        {{ initials(partner.partner_name) }}
+                      </span>
+
+                      <div class="partner-identity">
+                        <h3>{{ partner.partner_name }}</h3>
+                        <p>
+                          {{ partner.email || 'Sin correo registrado' }}
+                        </p>
+                      </div>
+
+                    </div>
+
+
+                    <span
+                      class="status"
+                      [class.status--inactive]="!partner.is_active"
+                    >
+                      <i aria-hidden="true"></i>
+                      {{ partner.is_active ? 'Activo' : 'Inactivo' }}
+                    </span>
+
+
+                    <div class="partner-profit">
+                      <span>Ganancia reportada</span>
+
+                      <strong [class.negative]="partner.profit < 0">
+                        {{ formatCurrency(partner.profit) }}
+                      </strong>
+                    </div>
+
+
+                    <dl class="partner-numbers">
+
+                      <div>
+                        <dt>Ventas</dt>
+                        <dd>{{ formatCurrency(partner.sales) }}</dd>
+                      </div>
+
+                      <div>
+                        <dt>Costos</dt>
+                        <dd>{{ formatCurrency(partner.cost) }}</dd>
+                      </div>
+
+                      <div>
+                        <dt>Unidades vendidas</dt>
+                        <dd>{{ partner.products_sold | number:'1.0-0' }}</dd>
+                      </div>
+
+                      <div>
+                        <dt>Transacciones</dt>
+                        <dd>
+                          {{ partner.total_transactions | number:'1.0-0' }}
+                        </dd>
+                      </div>
+
+                    </dl>
+
+
+                    <div class="partner-margin">
+                      <span>Margen de ganancia</span>
+
+                      <strong [class.negative]="partner.profit < 0">
+                        {{
+                          getProfitMargin(partner.sales, partner.profit) === null
+                            ? '—'
+                            : (
+                                getProfitMargin(partner.sales, partner.profit)
+                                  | number:'1.1-1'
+                              ) + '%'
+                        }}
+                      </strong>
+                    </div>
+
+                  </article>
+
+                }
+
+              </div>
+
+            }
+
+          </section>
+
+
+          <p class="data-note">
+            Importes en MXN. Los datos corresponden al resumen
+            devuelto por tu sistema. En tickets con varios socios,
+            una misma transacción puede aparecer en el desglose
+            de más de un socio.
           </p>
 
         </div>
 
-      </div>
+      }
 
+    </div>
 
-      <!-- =================================================
-           EMPTY STATE
-           ================================================= -->
-
-      <div
-        *ngIf="partners.length === 0"
-        class="empty-state"
-      >
-
-        <div class="empty-icon">
-          $
-        </div>
-
-        <h3>
-          Sin ganancias registradas
-        </h3>
-
-        <p>
-          Cuando se registren ventas aparecerán
-          aquí las ganancias por socio.
-        </p>
-
-      </div>
-
-
-      <!-- =================================================
-           PARTNER GRID
-           ================================================= -->
-
-      <div
-        *ngIf="partners.length > 0"
-        class="partners-grid"
-      >
-
-        <article
-          *ngFor="let partner of partners; let i = index"
-          class="partner-card"
-        >
-
-          <!-- PARTNER HEADER -->
-
-          <div class="partner-header">
-
-            <div class="partner-avatar">
-              {{ partner.partner_name.charAt(0).toUpperCase() }}
-            </div>
-
-            <div class="partner-info">
-
-              <h3>
-                {{ partner.partner_name }}
-              </h3>
-
-              <p>
-                {{ partner.email || 'Sin correo registrado' }}
-              </p>
-
-            </div>
-
-          </div>
-
-
-          <!-- PROFIT -->
-
-          <div class="partner-profit">
-
-            <span>
-              Ganancia
-            </span>
-
-            <strong>
-              {{ formatCurrency(partner.profit) }}
-            </strong>
-
-          </div>
-
-
-          <!-- PROFIT BAR -->
-
-          <div class="profit-progress">
-
-            <div class="progress-header">
-
-              <span>
-                Participación en ganancias
-              </span>
-
-              <strong>
-                {{
-                  getProfitPercentage(partner.profit)
-                    | number:'1.1-1'
-                }}%
-              </strong>
-
-            </div>
-
-            <div class="progress-track">
-
-              <div
-                class="progress-fill"
-                [style.width.%]="getProfitPercentage(partner.profit)"
-              ></div>
-
-            </div>
-
-          </div>
-
-
-          <!-- FINANCIAL DATA -->
-
-          <div class="financial-grid">
-
-            <div class="financial-item">
-
-              <span>
-                Ventas
-              </span>
-
-              <strong>
-                {{ formatCurrency(partner.sales) }}
-              </strong>
-
-            </div>
-
-
-            <div class="financial-item">
-
-              <span>
-                Costos
-              </span>
-
-              <strong>
-                {{ formatCurrency(partner.cost) }}
-              </strong>
-
-            </div>
-
-
-            <div class="financial-item">
-
-              <span>
-                Ganancia
-              </span>
-
-              <strong class="profit-value">
-                {{ formatCurrency(partner.profit) }}
-              </strong>
-
-            </div>
-
-
-            <div class="financial-item">
-
-              <span>
-                Productos
-              </span>
-
-              <strong>
-                {{ partner.products_sold }}
-              </strong>
-
-            </div>
-
-
-            <div class="financial-item">
-
-              <span>
-                Transacciones
-              </span>
-
-              <strong>
-                {{ partner.total_transactions }}
-              </strong>
-
-            </div>
-
-
-            <div class="financial-item">
-
-              <span>
-                Margen
-              </span>
-
-              <strong>
-                {{
-                  getProfitMargin(
-                    partner.sales,
-                    partner.profit
-                  ) | number:'1.1-1'
-                }}%
-              </strong>
-
-            </div>
-
-          </div>
-
-        </article>
-
-      </div>
-
-    </section>
-
-
-    <!-- ===================================================
-         INFORMATION
-         =================================================== -->
-
-    <section class="calculation-info">
-
-      <div class="info-icon">
-        i
-      </div>
-
-      <div class="info-content">
-
-        <h3>
-          Sobre las ganancias
-        </h3>
-
-        <p>
-          Las ganancias se calculan tomando en cuenta
-          el precio de venta y el costo registrado
-          para cada producto.
-        </p>
-
-        <p class="info-note">
-          Los costos corresponden al valor registrado
-          actualmente en el inventario.
-        </p>
-
-      </div>
-
-    </section>
-
-  </ng-container>
+  </main>
 
 </div>
