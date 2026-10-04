@@ -1,261 +1,571 @@
-<app-header />
-
-<main class="dashboard">
-
-  <!-- =========================================================
-       HERO
-  ========================================================== -->
-
-  <section class="dashboard__hero">
-
-    <div class="dashboard__hero-content">
-
-      <span class="dashboard__eyebrow">
-        COLLECTIFY
-      </span>
-
-      <h1>
-        Tu inventario, bajo control.
-      </h1>
-
-      <p>
-        Administra tus productos, controla existencias
-        y mantén organizada tu colección.
-      </p>
-
-    </div>
-
-
-    <!-- =======================================================
-         ESTADÍSTICAS
-    ======================================================== -->
-
-    <div class="dashboard__stats">
-
-      <div class="stat-card">
-
-        <span class="stat-card__label">
-          PRODUCTOS
-        </span>
-
-        <strong>
-          {{ products().length }}
-        </strong>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <span class="stat-card__label">
-          STOCK TOTAL
-        </span>
-
-        <strong>
-          {{ getTotalStock() }}
-        </strong>
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- =========================================================
-       INVENTARIO
-  ========================================================== -->
-
-  <section class="dashboard__inventory">
-
-    <div class="section-header">
-
-      <div>
-
-        <span class="section-header__eyebrow">
-          INVENTARIO
-        </span>
-
-        <h2>
-          Tus productos
-        </h2>
-
-        <p>
-          Consulta y administra los productos registrados.
-        </p>
-
-      </div>
-
-
-      <!-- ACTUALIZAR -->
-
-      <button
-        type="button"
-        class="section-header__refresh"
-        (click)="loadProducts()"
-        [disabled]="loading()"
-      >
-
-        @if (loading()) {
-
-          Cargando...
-
-        } @else {
-
-          Actualizar
-
-        }
-
-      </button>
-
-    </div>
-
-
-    <!-- =======================================================
-         LOADING
-    ======================================================== -->
-
-    @if (loading()) {
-
-      <div class="state-message">
-
-        <div class="loader"></div>
-
-        <p>
-          Cargando productos...
-        </p>
-
-      </div>
-
-    }
-
-
-    <!-- =======================================================
-         ERROR
-    ======================================================== -->
-
-    @else if (error()) {
-
-      <div class="state-message state-message--error">
-
-        <h3>
-          No se pudieron cargar los productos
-        </h3>
-
-        <p>
-          {{ error() }}
-        </p>
-
-        <button
-          type="button"
-          (click)="loadProducts()"
-        >
-          Intentar nuevamente
-        </button>
-
-      </div>
-
-    }
-
-
-    <!-- =======================================================
-         SIN PRODUCTOS
-    ======================================================== -->
-
-    @else if (products().length === 0) {
-
-      <app-empty-state />
-
-    }
-
-
-    <!-- =======================================================
-         PRODUCTOS
-    ======================================================== -->
-
-    @else {
-
-      <div class="products-grid">
-
-        @for (
-          product of products();
-          track product.id
-        ) {
-
-          <app-product-card
-            [product]="product"
-            (edit)="editProduct($event)"
-            (delete)="deleteProduct($event)"
-          />
-
-        }
-
-      </div>
-
-    }
-
-  </section>
-
-
-  <!-- =========================================================
-       GESTIÓN DE PRODUCTOS
-  ========================================================== -->
-
-  <section class="dashboard__create">
-
-    <div class="section-header">
-
-      <div>
-
-        <span class="section-header__eyebrow">
-          GESTIÓN
-        </span>
-
-        <h2>
-
-          @if (editingProduct()) {
-
-            Editar producto
-
-          } @else {
+<div class="dashboard-layout">
+  <app-header />
+
+  <main class="dashboard">
+    <div class="dashboard__container">
+
+      <!-- CABECERA -->
+      <header class="dashboard__heading">
+        <div>
+          <span class="eyebrow">TU ESPACIO DE TRABAJO</span>
+
+          <h1>Tu inventario, bajo control<span>.</span></h1>
+
+          <p>Todo lo que necesitas para administrar Collectify.</p>
+        </div>
+
+        <div class="heading-actions">
+          <button
+            type="button"
+            class="button button--dark"
+            (click)="startCreate()"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
 
             Agregar producto
+          </button>
 
-          }
+          <button
+            type="button"
+            class="button button--icon"
+            aria-label="Actualizar inventario"
+            title="Actualizar inventario"
+            [disabled]="loading()"
+            (click)="loadProducts()"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              [class.is-spinning]="loading()"
+            >
+              <path d="M20 7v5h-5M4 17v-5h5" />
+              <path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17" />
+            </svg>
+          </button>
+        </div>
+      </header>
 
-        </h2>
+      <!-- MENSAJES -->
+      @if (success()) {
+        <div class="notice notice--success" role="status">
+          <span>{{ success() }}</span>
 
-        <p>
+          <button
+            type="button"
+            aria-label="Cerrar mensaje"
+            (click)="success.set('')"
+          >
+            ×
+          </button>
+        </div>
+      }
 
-          @if (editingProduct()) {
+      @if (actionError()) {
+        <div class="notice notice--error" role="alert">
+          <span>{{ actionError() }}</span>
 
-            Modifica la información
-            del producto seleccionado.
+          <button
+            type="button"
+            aria-label="Cerrar error"
+            (click)="actionError.set('')"
+          >
+            ×
+          </button>
+        </div>
+      }
 
+      @if (error() && hasLoaded()) {
+        <div class="notice notice--error" role="alert">
+          <span>
+            {{ error() }}
+            Se mantienen los últimos datos cargados.
+          </span>
+
+          <button
+            type="button"
+            [disabled]="loading()"
+            (click)="loadProducts()"
+          >
+            Reintentar
+          </button>
+        </div>
+      }
+
+      <!-- RESUMEN Y GRÁFICAS -->
+      <section class="overview" aria-label="Resumen del inventario">
+
+        <!-- RESUMEN NEGRO -->
+        <article class="panel summary-panel">
+          <div class="panel__heading">
+            <h2>Resumen general</h2>
+
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m12 3 9 5-9 5-9-5 9-5Z" />
+              <path d="m3 12 9 5 9-5M3 16l9 5 9-5" />
+            </svg>
+          </div>
+
+          <div class="summary-panel__main">
+            <div>
+              <strong>
+                {{ hasLoaded() ? (products().length | number:'1.0-0') : '—' }}
+              </strong>
+
+              <span>Productos registrados</span>
+            </div>
+
+            <div>
+              <strong>
+                {{ hasLoaded() ? (totalStock() | number:'1.0-0') : '—' }}
+              </strong>
+
+              <span>Unidades en inventario</span>
+            </div>
+          </div>
+
+          <div class="summary-panel__line"></div>
+
+          <div class="summary-panel__metrics">
+            <button
+              type="button"
+              [disabled]="!hasLoaded()"
+              (click)="showStockFilter('available')"
+            >
+              <span class="metric-symbol">↗</span>
+              <strong>{{ hasLoaded() ? availableCount() : '—' }}</strong>
+              <span>Suficiente</span>
+            </button>
+
+            <button
+              type="button"
+              [disabled]="!hasLoaded()"
+              (click)="showStockFilter('low')"
+            >
+              <span class="metric-symbol">!</span>
+              <strong>{{ hasLoaded() ? lowStockCount() : '—' }}</strong>
+              <span>Stock bajo</span>
+            </button>
+
+            <button
+              type="button"
+              [disabled]="!hasLoaded()"
+              (click)="showStockFilter('empty')"
+            >
+              <span class="metric-symbol">○</span>
+              <strong>{{ hasLoaded() ? emptyCount() : '—' }}</strong>
+              <span>Sin stock</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- GRÁFICA DE BARRAS -->
+        <article class="panel stock-panel">
+          <div class="panel__heading">
+            <h2>Mayor disponibilidad</h2>
+
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 4v16h16M8 16v-5M13 16V7M18 16V4" />
+            </svg>
+          </div>
+
+          <p class="panel__description">
+            Hasta seis productos con más unidades.
+          </p>
+
+          @if (!hasLoaded()) {
+            <div class="chart-empty" role="status">
+              {{ loading() ? 'Cargando inventario…' : 'Datos no disponibles' }}
+            </div>
+          } @else if (topStockProducts().length === 0) {
+            <div class="chart-empty">
+              No hay unidades disponibles.
+            </div>
           } @else {
+            <div class="bar-chart">
+              @for (item of topStockProducts(); track item.product.id) {
+                <button
+                  type="button"
+                  class="bar-chart__row"
+                  [attr.aria-label]="item.product.name + ': ' + item.stock + ' unidades. Ver producto'"
+                  (click)="showProduct(item.product)"
+                >
+                  <span class="bar-chart__info">
+                    <span [attr.title]="item.product.name">
+                      {{ item.product.name }}
+                    </span>
 
-            Registra un nuevo producto
-            en tu inventario.
+                    <strong>{{ item.stock | number:'1.0-0' }}</strong>
+                  </span>
 
+                  <span class="bar-chart__track" aria-hidden="true">
+                    <span
+                      class="bar-chart__fill"
+                      [style.width.%]="item.width"
+                    ></span>
+                  </span>
+                </button>
+              }
+            </div>
           }
+        </article>
 
-        </p>
+        <!-- GRÁFICA CIRCULAR -->
+        <article class="panel distribution-panel">
+          <div class="panel__heading">
+            <h2>Estado del stock</h2>
 
-      </div>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3v9h9" />
+              <path d="M8.5 3.7A9 9 0 1 0 20.3 15.5M16 3.8a9 9 0 0 1 4.2 4.2" />
+            </svg>
+          </div>
+
+          <p class="panel__description">
+            Stock bajo: de 1 a {{ lowStockThreshold }} unidades.
+          </p>
+
+          @if (!hasLoaded()) {
+            <div class="chart-empty" role="status">
+              {{ loading() ? 'Cargando inventario…' : 'Datos no disponibles' }}
+            </div>
+          } @else {
+            <div class="donut">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle
+                  class="donut__background"
+                  cx="60"
+                  cy="60"
+                  r="46"
+                />
+
+                @for (segment of stockSegments(); track segment.label) {
+                  @if (segment.count > 0) {
+                    <circle
+                      class="donut__segment"
+                      cx="60"
+                      cy="60"
+                      r="46"
+                      pathLength="100"
+                      [attr.stroke]="segment.color"
+                      [attr.stroke-dasharray]="segment.percent + ' ' + (100 - segment.percent)"
+                      [attr.stroke-dashoffset]="-segment.offset"
+                    />
+                  }
+                }
+              </svg>
+
+              <div class="donut__center">
+                <strong>{{ products().length | number:'1.0-0' }}</strong>
+                <span>productos</span>
+              </div>
+            </div>
+
+            <div class="chart-legend">
+              @for (segment of stockSegments(); track segment.label) {
+                <button
+                  type="button"
+                  (click)="showStockFilter(segment.filter)"
+                >
+                  <span
+                    class="chart-legend__dot"
+                    [style.background]="segment.color"
+                    aria-hidden="true"
+                  ></span>
+
+                  <span>{{ segment.label }}</span>
+
+                  <strong>{{ segment.count }}</strong>
+
+                  <small>
+                    {{ segment.percent | number:'1.0-0' }}%
+                  </small>
+                </button>
+              }
+            </div>
+          }
+        </article>
+      </section>
+
+      <!-- ACCESOS REALES A TUS RUTAS -->
+      <nav class="quick-links" aria-label="Otras secciones de Collectify">
+        <span>Continúa en</span>
+
+        <a routerLink="/sales">Ventas <span aria-hidden="true">↗</span></a>
+        <a routerLink="/partners">Socios <span aria-hidden="true">↗</span></a>
+        <a routerLink="/earnings">Ganancias <span aria-hidden="true">↗</span></a>
+
+        @if (loading() && hasLoaded()) {
+          <small role="status">Actualizando…</small>
+        } @else if (lastUpdated()) {
+          <small>
+            Actualizado a las {{ lastUpdated() | date:'HH:mm' }}
+          </small>
+        }
+      </nav>
+
+      <!-- PRODUCTOS QUE NECESITAN ATENCIÓN -->
+      @if (hasLoaded() && attentionProducts().length > 0) {
+        <section class="attention-panel" aria-labelledby="attention-title">
+          <div class="attention-panel__heading">
+            <div>
+              <span class="eyebrow">REVISIÓN DE EXISTENCIAS</span>
+              <h2 id="attention-title">Necesitan atención</h2>
+            </div>
+
+            <span class="count-badge">
+              {{ attentionProducts().length }} productos
+            </span>
+          </div>
+
+          <div class="attention-list">
+            @for (product of attentionProducts().slice(0, 4); track product.id) {
+              <button
+                type="button"
+                class="attention-item"
+                [disabled]="deletingProductId() !== null"
+                [attr.aria-label]="'Editar ' + product.name"
+                (click)="editProduct(product)"
+              >
+                <span class="attention-item__symbol" aria-hidden="true">
+                  {{ stockOf(product) === 0 ? '○' : '!' }}
+                </span>
+
+                <span class="attention-item__copy">
+                  <strong>{{ product.name }}</strong>
+
+                  <small>
+                    @if (stockOf(product) === 0) {
+                      Sin existencias
+                    } @else {
+                      {{ stockOf(product) }} unidades disponibles
+                    }
+                  </small>
+                </span>
+
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m16 4 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15v5Z" />
+                </svg>
+              </button>
+            }
+          </div>
+
+          @if (attentionProducts().length > 4) {
+            <p class="attention-panel__note">
+              Hay {{ attentionProducts().length - 4 }} productos adicionales.
+              Puedes consultarlos con los filtros del inventario.
+            </p>
+          }
+        </section>
+      }
+
+      <!-- INVENTARIO -->
+      <section
+        class="inventory"
+        aria-labelledby="inventory-title"
+        [attr.aria-busy]="loading()"
+      >
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">INVENTARIO</span>
+
+            <h2
+              #inventoryHeading
+              id="inventory-title"
+              tabindex="-1"
+            >
+              Tus productos
+              @if (hasLoaded()) {
+                <span class="count-badge">{{ products().length }}</span>
+              }
+            </h2>
+
+            <p>Consulta, edita y organiza tus existencias.</p>
+          </div>
+
+          <button
+            type="button"
+            class="button button--light"
+            [disabled]="loading()"
+            (click)="loadProducts()"
+          >
+            {{ loading() ? 'Actualizando…' : 'Actualizar' }}
+          </button>
+        </div>
+
+        @if (hasLoaded() && products().length > 0) {
+          <div class="inventory-toolbar">
+            <label class="search-field">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="10.5" cy="10.5" r="6.5" />
+                <path d="m16 16 5 5" />
+              </svg>
+
+              <input
+                #searchInput
+                type="search"
+                placeholder="Buscar un producto…"
+                aria-label="Buscar productos por nombre"
+                [value]="search()"
+                (input)="search.set(searchInput.value)"
+              />
+            </label>
+
+            <label class="sort-field">
+              <span>Ordenar</span>
+
+              <select
+                #sortSelect
+                aria-label="Ordenar productos"
+                [value]="sortBy()"
+                (change)="setSort(sortSelect.value)"
+              >
+                <option value="name">Nombre A–Z</option>
+                <option value="stock-desc">Mayor stock</option>
+                <option value="stock-asc">Menor stock</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="inventory-filters">
+            <div class="filter-list" aria-label="Filtrar por existencias">
+              @for (option of filterOptions; track option.value) {
+                <button
+                  type="button"
+                  [class.is-active]="stockFilter() === option.value"
+                  [attr.aria-pressed]="stockFilter() === option.value"
+                  (click)="stockFilter.set(option.value)"
+                >
+                  {{ option.label }}
+                </button>
+              }
+            </div>
+
+            <span class="results-count">
+              {{ filteredProducts().length }} de {{ products().length }}
+            </span>
+          </div>
+        }
+
+        @if (loading() && !hasLoaded()) {
+          <div class="state-message" role="status">
+            <div class="loader" aria-hidden="true"></div>
+            <h3>Cargando tu inventario</h3>
+            <p>Estamos consultando tus productos.</p>
+          </div>
+        } @else if (error() && !hasLoaded()) {
+          <div class="state-message" role="alert">
+            <h3>No se pudo cargar el inventario</h3>
+            <p>{{ error() }}</p>
+
+            <button
+              type="button"
+              class="button button--dark"
+              (click)="loadProducts()"
+            >
+              Intentar nuevamente
+            </button>
+          </div>
+        } @else if (products().length === 0) {
+          <div class="empty-wrapper">
+            <app-empty-state />
+
+            <button
+              type="button"
+              class="button button--dark"
+              (click)="startCreate()"
+            >
+              Agregar mi primer producto
+            </button>
+          </div>
+        } @else if (filteredProducts().length === 0) {
+          <div class="state-message">
+            <h3>No encontramos productos</h3>
+            <p>Prueba otro nombre o modifica los filtros.</p>
+
+            <button
+              type="button"
+              class="button button--dark"
+              (click)="resetFilters()"
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        } @else {
+          <div class="products-grid">
+            @for (product of filteredProducts(); track product.id) {
+              <div
+                class="product-wrapper"
+                [class.product-wrapper--deleting]="deletingProductId() === product.id"
+                [attr.aria-busy]="deletingProductId() === product.id"
+              >
+                <div
+                  [attr.inert]="deletingProductId() === product.id ? '' : null"
+                >
+                  <app-product-card
+                    [product]="product"
+                    (edit)="editProduct($event)"
+                    (delete)="deleteProduct($event)"
+                  />
+                </div>
+
+                @if (deletingProductId() === product.id) {
+                  <span class="product-wrapper__status" role="status">
+                    Eliminando…
+                  </span>
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- FORMULARIO EXISTENTE -->
+      <section
+        id="product-form"
+        class="create-panel"
+        aria-labelledby="product-form-title"
+      >
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">GESTIÓN DE PRODUCTOS</span>
+
+            <h2
+              #formHeading
+              id="product-form-title"
+              tabindex="-1"
+            >
+              {{ editingProduct() ? 'Editar producto' : 'Agregar producto' }}
+            </h2>
+
+            <p>
+              {{
+                editingProduct()
+                  ? 'Actualiza la información del producto seleccionado.'
+                  : 'Registra un nuevo producto en tu inventario.'
+              }}
+            </p>
+          </div>
+
+          <span class="create-panel__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              @if (editingProduct()) {
+                <path d="m16 4 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15v5Z" />
+              } @else {
+                <path d="M12 5v14M5 12h14" />
+              }
+            </svg>
+          </span>
+        </div>
+
+        <app-product-form
+          [editingProduct]="editingProduct()"
+          (productSaved)="onProductSaved()"
+          (cancelled)="cancelEdit()"
+        />
+      </section>
 
     </div>
-
-
-    <!-- =======================================================
-         FORMULARIO
-    ======================================================== -->
-
-    <app-product-form
-      [editingProduct]="editingProduct()"
-      (productSaved)="onProductSaved()"
-      (cancelled)="cancelEdit()"
-    />
-
-  </section>
-
-</main>
+  </main>
+</div>
