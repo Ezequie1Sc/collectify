@@ -1,985 +1,465 @@
 import {
   Component,
+  DestroyRef,
   OnInit,
+  computed,
   inject,
   signal,
-  computed
 } from '@angular/core';
 
-import {
-  CommonModule
-} from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription, finalize } from 'rxjs';
 
-import {
-  FormsModule
-} from '@angular/forms';
-
-import {
-  ApiService
-} from '../../core/services/api';
-
-import {
-  Product
-} from '../../core/models/product';
-
+import { Header } from '../../components/header/header';
+import { ApiService } from '../../core/services/api';
+import { Product } from '../../core/models/product';
 import {
   SaleCreate,
-  SaleResponse
+  SaleResponse,
 } from '../../core/models/sale';
-
 
 interface CartItem {
   product: Product;
   quantity: number;
 }
 
-
 @Component({
   selector: 'app-sales',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    Header,
   ],
   templateUrl: './sales.html',
-  styleUrl: './sales.scss'
+  styleUrl: './sales.scss',
 })
 export class Sales implements OnInit {
+  private readonly api = inject(ApiService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  // =========================================================
-  // SERVICES
-  // =========================================================
+  private productsRequest?: Subscription;
 
-  private readonly api =
-    inject(ApiService);
+  private readonly currencyFormatter = new Intl.NumberFormat(
+    'es-MX',
+    {
+      style: 'currency',
+      currency: 'MXN',
+      minimumFractionDigits: 2,
+    },
+  );
 
+  // Conserva el vendedor que ya utilizabas.
+  readonly sellerId = '7c29ed96-5076-402b-a748-0d288ed95298';
 
-  // =========================================================
-  // CONFIGURACIÓN
-  // =========================================================
+  readonly products = signal<Product[]>([]);
+  readonly loading = signal(true);
+  readonly submitting = signal(false);
 
-  /**
-   * Usuario que registra la venta.
-   *
-   * Este ID debe existir en public.profiles.
-   */
-  readonly sellerId =
-    '7c29ed96-5076-402b-a748-0d288ed95298';
+  readonly loadError = signal('');
+  readonly error = signal('');
 
+  readonly search = signal('');
+  readonly cart = signal<CartItem[]>([]);
+  readonly sale = signal<SaleResponse | null>(null);
 
-  // =========================================================
-  // PRODUCTOS
-  // =========================================================
-
-  readonly products =
-    signal<Product[]>([]);
-
-  readonly loading =
-    signal(true);
-
-  readonly error =
-    signal('');
-
-
-  // =========================================================
-  // BÚSQUEDA
-  // =========================================================
-
-  readonly search =
-    signal('');
-
-
-  // =========================================================
-  // CARRITO / TICKET
-  // =========================================================
-
-  readonly cart =
-    signal<CartItem[]>([]);
-
-
-  // =========================================================
-  // VENTA REGISTRADA
-  // =========================================================
-
-  readonly sale =
-    signal<SaleResponse | null>(null);
-
-
-  // =========================================================
-  // COMPUTED
-  // =========================================================
-
-  /**
-   * Productos filtrados por:
-   *
-   * - nombre
-   * - categoría
-   * - SKU
-   */
   readonly filteredProducts = computed(() => {
+    const query = this.normalize(this.search().trim());
 
-    const search =
-      this.search()
-        .trim()
-        .toLowerCase();
-
-
-    if (!search) {
+    if (!query) {
       return this.products();
     }
 
-
-    return this.products().filter(
-      product => {
-
-        const name =
-          product.name?.toLowerCase() ?? '';
-
-        const category =
-          product.category?.toLowerCase() ?? '';
-
-        const sku =
-          product.sku?.toLowerCase() ?? '';
-
-
-        return (
-          name.includes(search) ||
-          category.includes(search) ||
-          sku.includes(search)
-        );
-
-      }
+    return this.products().filter(product =>
+      [
+        product.name,
+        product.category,
+        product.sku,
+      ].some(value =>
+        this.normalize(value ?? '').includes(query),
+      ),
     );
-
   });
 
+  readonly cartQuantity = computed(() =>
+    this.cart().reduce(
+      (total, item) => total + item.quantity,
+      0,
+    ),
+  );
 
-  /**
-   * Cantidad total de productos
-   * actualmente dentro del ticket.
-   */
-  readonly cartQuantity = computed(() => {
+  readonly cartTotal = computed(() =>
+    this.cart().reduce(
+      (total, item) =>
+        total + Number(item.product.price) * item.quantity,
+      0,
+    ),
+  );
 
-    return this.cart().reduce(
-      (
-        total,
-        item
-      ) =>
-        total + item.quantity,
-      0
-    );
+  readonly hasItems = computed(() => this.cart().length > 0);
 
-  });
+  readonly partnerId = computed(() =>
+    this.cart()[0]?.product.owner_id ?? null,
+  );
 
-
-  /**
-   * Total de la venta.
-   */
-  readonly cartTotal = computed(() => {
-
-    return this.cart().reduce(
-      (
-        total,
-        item
-      ) =>
-        total +
-        (
-          Number(item.product.price) *
-          item.quantity
-        ),
-      0
-    );
-
-  });
-
-
-  /**
-   * Indica si existe algún producto
-   * dentro del ticket.
-   */
-  readonly hasItems = computed(() => {
-
-    return this.cart().length > 0;
-
-  });
-
-
-  /**
-   * Socio propietario de la venta.
-   *
-   * El sistema lo determina automáticamente
-   * utilizando owner_id de los productos.
-   *
-   * Si el carrito está vacío, devuelve null.
-   */
-  readonly partnerId = computed(() => {
-
-    const items =
-      this.cart();
-
-
-    if (!items.length) {
-      return null;
-    }
-
-
-    return items[0].product.owner_id;
-
-  });
-
-
-  /**
-   * Comprueba si todos los productos
-   * pertenecen al mismo socio.
-   *
-   * Esto es necesario porque una venta
-   * solamente tiene un partner_id.
-   */
   readonly samePartner = computed(() => {
+    const items = this.cart();
+    const ownerId = items[0]?.product.owner_id;
 
-    const items =
-      this.cart();
-
-
-    if (items.length <= 1) {
-      return true;
-    }
-
-
-    const firstOwnerId =
-      items[0].product.owner_id;
-
-
-    return items.every(
-      item =>
-        item.product.owner_id ===
-        firstOwnerId
+    return items.every(item =>
+      item.product.owner_id === ownerId,
     );
-
   });
 
-
-  // =========================================================
-  // CICLO DE VIDA
-  // =========================================================
-
-  ngOnInit(): void {
-
-    this.loadProducts();
-
-  }
-
-
-  // =========================================================
-  // CARGAR PRODUCTOS
-  // =========================================================
-
-  loadProducts(): void {
-
-    this.loading.set(true);
-
-    this.error.set('');
-
-
-    this.api
-      .getProducts()
-      .subscribe({
-
-        next: (response) => {
-
-          this.products.set(
-            response.data ?? []
-          );
-
-          this.loading.set(false);
-
-        },
-
-
-        error: (error) => {
-
-          console.error(
-            'Error al cargar productos:',
-            error
-          );
-
-
-          this.error.set(
-            'No se pudieron cargar los productos.'
-          );
-
-
-          this.loading.set(false);
-
-        }
-
-      });
-
-  }
-
-
-  // =========================================================
-  // BÚSQUEDA
-  // =========================================================
-
-  onSearchChange(
-    value: string
-  ): void {
-
-    this.search.set(value);
-
-  }
-
-
-  // =========================================================
-  // AGREGAR PRODUCTO
-  // =========================================================
-
-  addToCart(
-    product: Product
-  ): void {
-
-    this.error.set('');
-
-
-    // -------------------------------------------------------
-    // VALIDAR STOCK
-    // -------------------------------------------------------
-
-    if (product.stock <= 0) {
-
-      this.error.set(
-        `El producto "${product.name}" no tiene stock disponible.`
+  // Comprueba el ticket contra el último inventario recibido.
+  readonly cartIssue = computed(() => {
+    for (const item of this.cart()) {
+      const current = this.products().find(
+        product => product.id === item.product.id,
       );
 
-      return;
+      if (!current) {
+        return `"${item.product.name}" ya no está disponible. Retíralo del ticket.`;
+      }
 
-    }
-
-
-    // -------------------------------------------------------
-    // VALIDAR SOCIO
-    // -------------------------------------------------------
-
-    const currentCart =
-      this.cart();
-
-
-    if (currentCart.length > 0) {
-
-      const currentPartnerId =
-        currentCart[0].product.owner_id;
-
-
-      /**
-       * No permitimos mezclar productos
-       * de diferentes socios en una misma venta.
-       *
-       * La tabla sales solamente tiene
-       * un partner_id.
-       */
       if (
-        product.owner_id !==
-        currentPartnerId
+        item.quantity < 1 ||
+        !Number.isInteger(item.quantity) ||
+        item.quantity > this.stockOf(current)
       ) {
-
-        this.error.set(
-          'No puedes mezclar productos de diferentes socios en el mismo ticket.'
-        );
-
-        return;
-
+        return `Revisa la cantidad de "${item.product.name}". Stock actual: ${this.stockOf(current)}.`;
       }
 
-    }
-
-
-    // -------------------------------------------------------
-    // BUSCAR SI YA EXISTE
-    // -------------------------------------------------------
-
-    const existingItem =
-      currentCart.find(
-        item =>
-          item.product.id ===
-          product.id
-      );
-
-
-    // -------------------------------------------------------
-    // PRODUCTO YA EXISTE
-    // -------------------------------------------------------
-
-    if (existingItem) {
-
-      /**
-       * No permitir superar el stock.
-       */
       if (
-        existingItem.quantity >=
-        product.stock
+        !Number.isFinite(Number(current.price)) ||
+        Number(current.price) < 0
       ) {
-
-        this.error.set(
-          `No hay más stock disponible de "${product.name}".`
-        );
-
-        return;
-
+        return `"${item.product.name}" tiene un precio inválido.`;
       }
 
-
-      this.cart.set(
-        currentCart.map(
-          item => {
-
-            if (
-              item.product.id ===
-              product.id
-            ) {
-
-              return {
-                ...item,
-                quantity:
-                  item.quantity + 1
-              };
-
-            }
-
-
-            return item;
-
-          }
-        )
-      );
-
-
-      return;
-
+      if (!current.owner_id) {
+        return `"${item.product.name}" no tiene un socio asignado.`;
+      }
     }
-
-
-    // -------------------------------------------------------
-    // PRODUCTO NUEVO
-    // -------------------------------------------------------
-
-    this.cart.set([
-
-      ...currentCart,
-
-      {
-        product,
-        quantity: 1
-      }
-
-    ]);
-
-  }
-
-
-  // =========================================================
-  // AUMENTAR CANTIDAD
-  // =========================================================
-
-  increaseQuantity(
-    productId: string
-  ): void {
-
-    this.cart.update(
-      items => {
-
-        return items.map(
-          item => {
-
-            if (
-              item.product.id !==
-              productId
-            ) {
-
-              return item;
-
-            }
-
-
-            // -------------------------------------------------
-            // VALIDAR STOCK
-            // -------------------------------------------------
-
-            if (
-              item.quantity >=
-              item.product.stock
-            ) {
-
-              this.error.set(
-                `No hay más stock disponible de "${item.product.name}".`
-              );
-
-              return item;
-
-            }
-
-
-            this.error.set('');
-
-
-            return {
-
-              ...item,
-
-              quantity:
-                item.quantity + 1
-
-            };
-
-          }
-        );
-
-      }
-    );
-
-  }
-
-
-  // =========================================================
-  // DISMINUIR CANTIDAD
-  // =========================================================
-
-  decreaseQuantity(
-    productId: string
-  ): void {
-
-    this.error.set('');
-
-
-    this.cart.update(
-      items => {
-
-        return items
-          .map(
-            item => {
-
-              if (
-                item.product.id !==
-                productId
-              ) {
-
-                return item;
-
-              }
-
-
-              return {
-
-                ...item,
-
-                quantity:
-                  item.quantity - 1
-
-              };
-
-            }
-          )
-          .filter(
-            item =>
-              item.quantity > 0
-          );
-
-      }
-    );
-
-  }
-
-
-  // =========================================================
-  // ELIMINAR DEL TICKET
-  // =========================================================
-
-  removeFromCart(
-    productId: string
-  ): void {
-
-    this.cart.update(
-      items => {
-
-        return items.filter(
-          item =>
-            item.product.id !==
-            productId
-        );
-
-      }
-    );
-
-    this.error.set('');
-
-  }
-
-
-  // =========================================================
-  // VACIAR TICKET
-  // =========================================================
-
-  clearCart(): void {
-
-    this.cart.set([]);
-
-    this.sale.set(null);
-
-    this.error.set('');
-
-  }
-
-
-  // =========================================================
-  // REGISTRAR VENTA
-  // =========================================================
-
-  registerSale(): void {
-
-    this.error.set('');
-
-
-    // -------------------------------------------------------
-    // VALIDAR CARRITO
-    // -------------------------------------------------------
-
-    if (!this.hasItems()) {
-
-      this.error.set(
-        'Agrega al menos un producto al ticket.'
-      );
-
-      return;
-
-    }
-
-
-    // -------------------------------------------------------
-    // VALIDAR SOCIO
-    // -------------------------------------------------------
-
-    const partnerId =
-      this.partnerId();
-
-
-    if (!partnerId) {
-
-      this.error.set(
-        'No se pudo determinar el socio propietario de los productos.'
-      );
-
-      return;
-
-    }
-
-
-    // -------------------------------------------------------
-    // VALIDAR QUE TODOS PERTENEZCAN AL MISMO SOCIO
-    // -------------------------------------------------------
 
     if (!this.samePartner()) {
-
-      this.error.set(
-        'Los productos del ticket pertenecen a diferentes socios. Realiza una venta separada para cada socio.'
-      );
-
-      return;
-
+      return 'Los productos deben pertenecer al mismo socio.';
     }
 
-
-    // -------------------------------------------------------
-    // PREPARAR ITEMS
-    // -------------------------------------------------------
-
-    const items =
-      this.cart().map(
-        item => ({
-
-          product_id:
-            item.product.id,
-
-          /**
-           * El propietario se obtiene
-           * automáticamente del producto.
-           */
-          owner_id:
-            item.product.owner_id,
-
-          quantity:
-            item.quantity,
-
-          /**
-           * Se utiliza el precio actual
-           * del producto.
-           */
-          unit_price:
-            Number(item.product.price)
-
-        })
-      );
-
-
-    // -------------------------------------------------------
-    // PREPARAR VENTA
-    // -------------------------------------------------------
-
-    const sale: SaleCreate = {
-
-      /**
-       * Usuario que registra la venta.
-       */
-      seller_id:
-        this.sellerId,
-
-      /**
-       * Socio propietario de los productos.
-       *
-       * Se determina automáticamente.
-       */
-      partner_id:
-        partnerId,
-
-      /**
-       * Productos vendidos.
-       */
-      items
-
-    };
-
-
-    // -------------------------------------------------------
-    // DEBUG
-    // -------------------------------------------------------
-
-    console.log(
-      'Venta enviada al backend:',
-      sale
-    );
-
-
-    // -------------------------------------------------------
-    // ENVIAR AL BACKEND
-    // -------------------------------------------------------
-
-    this.api
-      .createSale(sale)
-      .subscribe({
-
-        // ===================================================
-        // SUCCESS
-        // ===================================================
-
-        next: (
-          response
-        ) => {
-
-          console.log(
-            'Venta registrada correctamente:',
-            response
-          );
-
-
-          // -----------------------------------------------
-          // GUARDAR TICKET
-          // -----------------------------------------------
-
-          this.sale.set(
-            response
-          );
-
-
-          // -----------------------------------------------
-          // LIMPIAR CARRITO
-          // -----------------------------------------------
-
-          this.cart.set([]);
-
-
-          // -----------------------------------------------
-          // ACTUALIZAR PRODUCTOS / STOCK
-          // -----------------------------------------------
-
-          this.loadProducts();
-
-        },
-
-
-        // ===================================================
-        // ERROR
-        // ===================================================
-
-        error: (
-          error
-        ) => {
-
-          console.error(
-            'Error al registrar venta:',
-            error
-          );
-
-
-          console.error(
-            'Status:',
-            error?.status
-          );
-
-
-          console.error(
-            'Respuesta del backend:',
-            error?.error
-          );
-
-
-          const detail =
-            error?.error?.detail;
-
-
-          // -----------------------------------------------
-          // MOSTRAR ERROR DE FASTAPI
-          // -----------------------------------------------
-
-          if (
-            typeof detail ===
-            'string'
-          ) {
-
-            this.error.set(
-              detail
-            );
-
-            return;
-
-          }
-
-
-          // -----------------------------------------------
-          // MOSTRAR ERROR DE VALIDACIÓN 422
-          // -----------------------------------------------
-
-          if (
-            Array.isArray(detail)
-          ) {
-
-            const messages =
-              detail
-                .map(
-                  item => {
-
-                    const location =
-                      Array.isArray(
-                        item?.loc
-                      )
-                        ? item.loc.join('.')
-                        : 'campo';
-
-
-                    return `${location}: ${item?.msg ?? 'valor inválido'}`;
-
-                  }
-                )
-                .join(' | ');
-
-
-            this.error.set(
-              messages ||
-              'Los datos enviados no son válidos.'
-            );
-
-            return;
-
-          }
-
-
-          // -----------------------------------------------
-          // ERROR GENÉRICO
-          // -----------------------------------------------
-
-          this.error.set(
-            'No se pudo registrar la venta.'
-          );
-
-        }
-
-      });
-
+    return '';
+  });
+
+  readonly canRegister = computed(() =>
+    this.hasItems() &&
+    !this.loading() &&
+    !this.submitting() &&
+    !this.loadError() &&
+    !this.sale() &&
+    !this.cartIssue(),
+  );
+
+  ngOnInit(): void {
+    this.loadProducts();
   }
 
+  loadProducts(): void {
+    if (this.submitting()) {
+      return;
+    }
 
-  // =========================================================
-  // NUEVA VENTA
-  // =========================================================
+    this.productsRequest?.unsubscribe();
 
-  newSale(): void {
+    this.loading.set(true);
+    this.loadError.set('');
 
-    this.sale.set(null);
+    this.productsRequest = this.api.getProducts()
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.loading.set(false)),
+      )
+      .subscribe({
+        next: response => {
+          const products = response.data ?? [];
 
-    this.cart.set([]);
+          this.products.set(products);
+
+          // Mantiene las cantidades y actualiza precio/stock
+          // de los productos que ya están en el ticket.
+          this.cart.update(items =>
+            items.map(item => ({
+              ...item,
+              product: products.find(
+                product => product.id === item.product.id,
+              ) ?? item.product,
+            })),
+          );
+        },
+
+        error: error => {
+          this.loadError.set(
+            this.readError(
+              error,
+              'No se pudieron actualizar los productos.',
+            ),
+          );
+        },
+      });
+  }
+
+  onSearchChange(value: string): void {
+    this.search.set(value);
+  }
+
+  addToCart(product: Product): void {
+    if (
+      this.submitting() ||
+      this.loading() ||
+      this.sale() ||
+      this.loadError()
+    ) {
+      return;
+    }
 
     this.error.set('');
 
-    this.search.set('');
+    if (!product.owner_id) {
+      this.error.set(
+        'Este producto no tiene un socio asignado.',
+      );
+      return;
+    }
 
-    this.loadProducts();
+    if (this.stockOf(product) <= 0) {
+      this.error.set(
+        `"${product.name}" no tiene stock disponible.`,
+      );
+      return;
+    }
 
-  }
+    if (
+      this.hasItems() &&
+      product.owner_id !== this.partnerId()
+    ) {
+      this.error.set(
+        'No puedes mezclar productos de diferentes socios en el mismo ticket.',
+      );
+      return;
+    }
 
+    const quantity = this.getCartQuantity(product.id);
 
-  // =========================================================
-  // OBTENER CANTIDAD
-  // =========================================================
+    if (quantity >= this.stockOf(product)) {
+      this.error.set(
+        `No hay más stock disponible de "${product.name}".`,
+      );
+      return;
+    }
 
-  getCartQuantity(
-    productId: string
-  ): number {
-
-    const item =
-      this.cart().find(
-        item =>
-          item.product.id ===
-          productId
+    this.cart.update(items => {
+      const exists = items.some(
+        item => item.product.id === product.id,
       );
 
-
-    return item?.quantity ?? 0;
-
+      return exists
+        ? items.map(item =>
+            item.product.id === product.id
+              ? {
+                  product,
+                  quantity: item.quantity + 1,
+                }
+              : item,
+          )
+        : [...items, { product, quantity: 1 }];
+    });
   }
 
-
-  // =========================================================
-  // COMPROBAR SI ESTÁ EN EL TICKET
-  // =========================================================
-
-  isInCart(
-    productId: string
-  ): boolean {
-
-    return this.cart().some(
-      item =>
-        item.product.id ===
-        productId
+  increaseQuantity(productId: string): void {
+    const product = this.products().find(
+      current => current.id === productId,
     );
 
+    if (product) {
+      this.addToCart(product);
+    }
   }
 
+  decreaseQuantity(productId: string): void {
+    if (this.submitting()) {
+      return;
+    }
 
-  // =========================================================
-  // FORMATEAR MONEDA
-  // =========================================================
+    this.error.set('');
 
-  formatCurrency(
-    value: number
-  ): string {
-
-    return new Intl.NumberFormat(
-      'es-MX',
-      {
-        style: 'currency',
-        currency: 'MXN',
-        minimumFractionDigits: 2
-      }
-    ).format(value);
-
+    this.cart.update(items =>
+      items
+        .map(item =>
+          item.product.id === productId
+            ? { ...item, quantity: item.quantity - 1 }
+            : item,
+        )
+        .filter(item => item.quantity > 0),
+    );
   }
 
+  removeFromCart(productId: string): void {
+    if (this.submitting()) {
+      return;
+    }
+
+    this.cart.update(items =>
+      items.filter(item => item.product.id !== productId),
+    );
+
+    this.error.set('');
+  }
+
+  clearCart(): void {
+    if (this.submitting()) {
+      return;
+    }
+
+    this.cart.set([]);
+    this.error.set('');
+  }
+
+  registerSale(): void {
+    if (this.submitting() || this.sale()) {
+      return;
+    }
+
+    this.error.set('');
+
+    if (this.loading() || this.loadError()) {
+      this.error.set(
+        'Actualiza el inventario antes de registrar la venta.',
+      );
+      return;
+    }
+
+    if (!this.hasItems()) {
+      this.error.set('Agrega al menos un producto.');
+      return;
+    }
+
+    if (this.cartIssue()) {
+      this.error.set(this.cartIssue());
+      return;
+    }
+
+    const partnerId = this.partnerId();
+
+    if (!partnerId) {
+      this.error.set(
+        'No se pudo determinar el socio propietario.',
+      );
+      return;
+    }
+
+    const payload: SaleCreate = {
+      seller_id: this.sellerId,
+      partner_id: partnerId,
+      items: this.cart().map(item => ({
+        product_id: item.product.id,
+        owner_id: item.product.owner_id,
+        quantity: item.quantity,
+        unit_price: Number(item.product.price),
+      })),
+    };
+
+    this.submitting.set(true);
+
+    this.api.createSale(payload)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.submitting.set(false)),
+      )
+      .subscribe({
+        next: response => {
+          this.sale.set(response);
+          this.cart.set([]);
+          this.submitting.set(false);
+          this.loadProducts();
+        },
+
+        error: error => {
+          this.error.set(
+            this.readError(
+              error,
+              'No se pudo confirmar la venta. Comprueba si se registró antes de volver a enviarla.',
+            ),
+          );
+        },
+      });
+  }
+
+  newSale(): void {
+    if (this.submitting()) {
+      return;
+    }
+
+    this.sale.set(null);
+    this.cart.set([]);
+    this.search.set('');
+    this.error.set('');
+
+    this.loadProducts();
+  }
+
+  getCartQuantity(productId: string): number {
+    return this.cart().find(
+      item => item.product.id === productId,
+    )?.quantity ?? 0;
+  }
+
+  isInCart(productId: string): boolean {
+    return this.getCartQuantity(productId) > 0;
+  }
+
+  stockOf(product: Product): number {
+    const stock = Number(product.stock);
+
+    return Number.isFinite(stock)
+      ? Math.max(0, Math.floor(stock))
+      : 0;
+  }
+
+  formatCurrency(value: number): string {
+    return this.currencyFormatter.format(Number(value));
+  }
+
+  private normalize(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+  }
+
+  private readError(error: unknown, fallback: string): string {
+    const response = error as {
+      error?: { detail?: unknown; message?: unknown };
+    } | null;
+
+    const detail = response?.error?.detail;
+
+    if (typeof detail === 'string') {
+      return detail;
+    }
+
+    if (Array.isArray(detail)) {
+      const messages = detail.map(
+        (item: { loc?: unknown[]; msg?: string }) =>
+          `${item.loc?.join('.') ?? 'Campo'}: ${item.msg ?? 'Valor inválido'}`,
+      );
+
+      return messages.join(' · ') || fallback;
+    }
+
+    const message = response?.error?.message;
+
+    return typeof message === 'string'
+      ? message
+      : fallback;
+  }
 }
