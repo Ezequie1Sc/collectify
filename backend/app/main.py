@@ -6,7 +6,8 @@ from app.routers import (
     earnings,
     partners,
     products,
-    sales
+    sales,
+    suppliers
 )
 
 
@@ -16,11 +17,16 @@ app = FastAPI(
 )
 
 
+# =========================================================
+# CORS
+# =========================================================
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:4200",
-        "http://127.0.0.1:4200"
+        "http://127.0.0.1:4200",
+        "https://collectify-7xcu.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -28,17 +34,46 @@ app.add_middleware(
 )
 
 
+# =========================================================
+# ROUTERS
+# =========================================================
+
 app.include_router(products.router)
 app.include_router(sales.router)
 app.include_router(earnings.router)
 app.include_router(partners.router)
 app.include_router(ai.router)
+app.include_router(suppliers.router)
 
 
-@app.get("/", tags=["Root"])
+# =========================================================
+# ROOT
+# =========================================================
+
+@app.get(
+    "/",
+    tags=["Root"]
+)
 def root():
 
     return {
         "message": "Collectify API funcionando",
+        "version": "0.1.0"
+    }
+
+
+# =========================================================
+# HEALTH CHECK
+# =========================================================
+
+@app.get(
+    "/health",
+    tags=["Health"]
+)
+def health():
+
+    return {
+        "status": "healthy",
+        "service": "collectify-api",
         "version": "0.1.0"
     }
