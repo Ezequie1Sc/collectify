@@ -11,6 +11,11 @@ import {
   Observable
 } from 'rxjs';
 
+
+// =========================================================
+// MODELS
+// =========================================================
+
 import {
   Product,
   ProductCreate,
@@ -41,28 +46,63 @@ import {
   AIResponse
 } from '../models/ai';
 
+import {
+  SupplierRequest,
+  SupplierResponse
+} from '../models/supplier';
+
+
+// =========================================================
+// API SERVICE
+// =========================================================
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
 
-  private readonly http = inject(HttpClient);
+
+  // =======================================================
+  // HTTP
+  // =======================================================
+
+  private readonly http =
+    inject(HttpClient);
 
 
-  // =========================================================
+  // =======================================================
   // BASE URL
-  // =========================================================
+  // =======================================================
 
- private readonly baseUrl =
-  'https://collectify-api-udxk.onrender.com';
+  /*
+   * LOCAL
+   *
+   * Para trabajar con FastAPI local:
+   *
+   * http://127.0.0.1:8000
+   */
+
+  private readonly baseUrl =
+    'https://collectify-7xcu.vercel.app';
 
 
-  // =========================================================
+  /*
+   * RENDER
+   *
+   * Cuando vayas a producción cambia únicamente
+   * la línea anterior por:
+   *
+   * https://collectify-api-udxk.onrender.com
+   *
+   */
+
+
+  // =======================================================
   // PRODUCTS
-  // =========================================================
+  // =======================================================
 
-  getProducts(): Observable<ProductsResponse> {
+  getProducts():
+    Observable<ProductsResponse> {
 
     console.log(
       '[API] GET /products'
@@ -74,12 +114,14 @@ export class ApiService {
   }
 
 
-  /**
-   * Obtiene los productos de un socio específico.
-   */
+  // =======================================================
+  // PRODUCTS BY OWNER
+  // =======================================================
+
   getProductsByOwner(
     ownerId: string
-  ): Observable<ProductsResponse> {
+  ):
+    Observable<ProductsResponse> {
 
     console.log(
       '[API] GET /products/',
@@ -92,13 +134,14 @@ export class ApiService {
   }
 
 
-  // =========================================================
+  // =======================================================
   // CREATE PRODUCT
-  // =========================================================
+  // =======================================================
 
   createProduct(
     product: ProductCreate
-  ): Observable<ProductResponse> {
+  ):
+    Observable<ProductResponse> {
 
     console.log(
       '[API] POST /products',
@@ -112,14 +155,15 @@ export class ApiService {
   }
 
 
-  // =========================================================
+  // =======================================================
   // UPDATE PRODUCT
-  // =========================================================
+  // =======================================================
 
   updateProduct(
     productId: string,
     product: ProductUpdate
-  ): Observable<ProductResponse> {
+  ):
+    Observable<ProductResponse> {
 
     console.log(
       '[API] PATCH /products/',
@@ -134,18 +178,19 @@ export class ApiService {
   }
 
 
-  // =========================================================
+  // =======================================================
   // DELETE PRODUCT
-  // =========================================================
+  // =======================================================
 
   deleteProduct(
     productId: string
-  ): Observable<{
-    message: string;
-    deleted: boolean;
-    deactivated: boolean;
-    data: Product;
-  }> {
+  ):
+    Observable<{
+      message: string;
+      deleted: boolean;
+      deactivated: boolean;
+      data: Product;
+    }> {
 
     console.log(
       '[API] DELETE /products/',
@@ -163,13 +208,14 @@ export class ApiService {
   }
 
 
-  // =========================================================
+  // =======================================================
   // SALES
-  // =========================================================
+  // =======================================================
 
   createSale(
     sale: SaleCreate
-  ): Observable<SaleResponse> {
+  ):
+    Observable<SaleResponse> {
 
     console.log(
       '[API] POST /sales'
@@ -187,11 +233,12 @@ export class ApiService {
   }
 
 
-  // =========================================================
+  // =======================================================
   // PARTNERS
-  // =========================================================
+  // =======================================================
 
-  getPartners(): Observable<PartnersResponse> {
+  getPartners():
+    Observable<PartnersResponse> {
 
     console.log(
       '[API] GET /partners'
@@ -203,13 +250,14 @@ export class ApiService {
   }
 
 
-  // =========================================================
+  // =======================================================
   // CREATE PARTNER
-  // =========================================================
+  // =======================================================
 
   createPartner(
     partner: PartnerCreate
-  ): Observable<PartnerResponse> {
+  ):
+    Observable<PartnerResponse> {
 
     console.log(
       '[API] POST /partners',
@@ -223,14 +271,15 @@ export class ApiService {
   }
 
 
-  // =========================================================
+  // =======================================================
   // UPDATE PARTNER
-  // =========================================================
+  // =======================================================
 
   updatePartner(
     partnerId: string,
     partner: PartnerUpdate
-  ): Observable<PartnerResponse> {
+  ):
+    Observable<PartnerResponse> {
 
     console.log(
       '[API] PATCH /partners/',
@@ -245,18 +294,19 @@ export class ApiService {
   }
 
 
-  // =========================================================
+  // =======================================================
   // DELETE PARTNER
-  // =========================================================
+  // =======================================================
 
   deletePartner(
     partnerId: string
-  ): Observable<{
-    message: string;
-    deleted: boolean;
-    deactivated: boolean;
-    data: Partner;
-  }> {
+  ):
+    Observable<{
+      message: string;
+      deleted: boolean;
+      deactivated: boolean;
+      data: Partner;
+    }> {
 
     console.log(
       '[API] DELETE /partners/',
@@ -274,11 +324,12 @@ export class ApiService {
   }
 
 
-  // =========================================================
+  // =======================================================
   // EARNINGS
-  // =========================================================
+  // =======================================================
 
-  getEarnings(): Observable<EarningsResponse> {
+  getEarnings():
+    Observable<EarningsResponse> {
 
     console.log(
       '[API] GET /earnings'
@@ -298,31 +349,14 @@ export class ApiService {
   }
 
 
-  // =========================================================
-  // AI
-  // =========================================================
+  // =======================================================
+  // AI ANALYSIS
+  // =======================================================
 
-  /**
-   * Envía una pregunta a Collectify AI.
-   *
-   * Backend:
-   *
-   * POST /ai/analyze
-   *
-   * Request:
-   * {
-   *   question: string
-   * }
-   *
-   * Response:
-   * {
-   *   question: string;
-   *   answer: string;
-   * }
-   */
   analyzeWithAI(
     question: string
-  ): Observable<AIResponse> {
+  ):
+    Observable<AIResponse> {
 
     console.log(
       '[API] POST /ai/analyze'
@@ -340,6 +374,31 @@ export class ApiService {
     return this.http.post<AIResponse>(
       `${this.baseUrl}/ai/analyze`,
       body
+    );
+  }
+
+
+  // =======================================================
+  // AI - SEARCH SUPPLIERS
+  // =======================================================
+
+  searchSuppliers(
+    request: SupplierRequest
+  ):
+    Observable<SupplierResponse> {
+
+    console.log(
+      '[API] POST /ai/suppliers'
+    );
+
+    console.log(
+      '[API] Solicitud de proveedores:',
+      request
+    );
+
+    return this.http.post<SupplierResponse>(
+      `${this.baseUrl}/ai/suppliers`,
+      request
     );
   }
 
