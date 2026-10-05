@@ -1,78 +1,119 @@
-<!-- CABECERA MÓVIL -->
-<div class="mobile-header">
+<!-- BARRA SUPERIOR MÓVIL -->
+
+<div class="mobile-bar">
+
   <a
     routerLink="/dashboard"
     class="mobile-brand"
-    (click)="closeMobileMenu()"
+    aria-label="Collectify, ir al dashboard"
+    (click)="closeMobileMenu(false)"
   >
-    <span class="brand__mark">C</span>
+    <img
+      [src]="logoPath"
+      alt=""
+      width="40"
+      height="40"
+      class="mobile-brand__logo"
+    />
+
     <span>Collectify</span>
   </a>
+
 
   <button
     #mobileToggle
     type="button"
-    class="icon-button"
+    class="icon-button mobile-menu-button"
     aria-controls="collectify-sidebar"
-    [attr.aria-expanded]="mobileMenuOpen"
-    [attr.aria-label]="mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'"
+    [attr.aria-expanded]="mobileMenuOpen()"
+    [attr.aria-label]="mobileMenuOpen() ? 'Cerrar menú' : 'Abrir menú'"
     (click)="toggleMobileMenu()"
   >
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 8h14M5 16h14" />
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      aria-hidden="true"
+    >
+      <path d="M4 6h16M4 12h16M4 18h16" />
     </svg>
   </button>
+
 </div>
 
-<!-- FONDO MÓVIL -->
-<button
-  type="button"
-  class="backdrop"
-  [class.backdrop--open]="mobileMenuOpen"
-  [attr.tabindex]="mobileMenuOpen ? 0 : -1"
-  aria-label="Cerrar menú"
-  (click)="closeMobileMenu()"
-></button>
+
+<!-- FONDO DEL MENÚ MÓVIL -->
+
+@if (mobileMenuOpen()) {
+  <div
+    class="sidebar-backdrop"
+    aria-hidden="true"
+    (click)="closeMobileMenu()"
+  ></div>
+}
+
 
 <!-- BARRA LATERAL -->
-<header
+
+<aside
+  #sidebar
   id="collectify-sidebar"
   class="sidebar"
-  [class.sidebar--collapsed]="collapsed"
-  [class.sidebar--open]="mobileMenuOpen"
+  [class.sidebar--open]="mobileMenuOpen()"
+  [attr.inert]="isMobile() && !mobileMenuOpen() ? '' : null"
+  [attr.role]="isMobile() && mobileMenuOpen() ? 'dialog' : null"
+  [attr.aria-modal]="isMobile() && mobileMenuOpen() ? 'true' : null"
+  aria-label="Menú principal de Collectify"
 >
-  <!-- =====================================================
-       PARTE SUPERIOR
-       ===================================================== -->
 
-  <div class="sidebar__top">
+  <!-- LOGO -->
+
+  <div class="sidebar__header">
 
     <a
       routerLink="/dashboard"
       class="brand"
       aria-label="Collectify, ir al dashboard"
-      (click)="closeMobileMenu()"
+      (click)="closeMobileMenu(false)"
     >
-      <span class="brand__mark">C</span>
 
-      <span class="brand__copy">
-        <span class="brand__name">
-          Collectify
-        </span>
+      <span class="brand__logo-wrap">
+        <img
+          [src]="logoPath"
+          alt=""
+          width="46"
+          height="46"
+          class="brand__logo"
+        />
+      </span>
 
+      <span class="brand__text">
+        <span class="brand__name">Collectify</span>
         <span class="brand__description">
           Inventario inteligente
         </span>
       </span>
+
     </a>
 
+
     <button
+      #mobileClose
       type="button"
       class="icon-button mobile-close"
       aria-label="Cerrar menú"
       (click)="closeMobileMenu()"
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
         <path d="m6 6 12 12M18 6 6 18" />
       </svg>
     </button>
@@ -80,208 +121,105 @@
   </div>
 
 
-  <!-- =====================================================
-       NAVEGACIÓN
-       ===================================================== -->
+  <!-- NAVEGACIÓN -->
 
-  <nav
-    class="navigation"
-    aria-label="Navegación principal"
-  >
+  <div class="sidebar__body">
 
-    <!-- NAVEGACIÓN PRINCIPAL -->
+    <span class="sidebar__label">ESPACIO DE TRABAJO</span>
 
-    <div class="navigation__group">
+    <nav
+      id="collectify-navigation"
+      class="navigation"
+      aria-label="Navegación principal"
+    >
 
-      @for (
-        item of mainNavigation;
-        track item.route
-      ) {
+      @for (item of navigation; track item.route) {
 
         <a
-          class="navigation__link"
           [routerLink]="item.route"
           routerLinkActive="navigation__link--active"
-          [routerLinkActiveOptions]="{
-            exact: item.exact
-          }"
+          [routerLinkActiveOptions]="{ exact: item.exact }"
           ariaCurrentWhenActive="page"
+          class="navigation__link"
           [attr.aria-label]="item.label"
-          [attr.title]="collapsed ? item.label : null"
-          (click)="closeMobileMenu()"
+          [attr.title]="collapsed() && !isMobile() ? item.label : null"
+          (click)="closeMobileMenu(false)"
         >
 
-          <svg
-            class="navigation__icon"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-
-            @for (
-              path of item.paths;
-              track $index
-            ) {
-
-              <path
-                [attr.d]="path"
-              />
-
-            }
-
-          </svg>
+          <span class="navigation__icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              @for (path of item.paths; track $index) {
+                <path [attr.d]="path" />
+              }
+            </svg>
+          </span>
 
           <span class="navigation__label">
             {{ item.label }}
           </span>
 
+          <span class="navigation__indicator" aria-hidden="true"></span>
+
         </a>
 
       }
 
-    </div>
+    </nav>
+
+  </div>
 
 
-    <!-- =================================================
-         ASISTENTE IA
-         ================================================= -->
+  <!-- PIE -->
 
-    <div class="navigation__section">
+  <div class="sidebar__footer">
 
-      <span class="navigation__caption">
-        ASISTENTE
-      </span>
+    <div class="profile" aria-label="Ezequiel">
 
+      <span class="profile__avatar" aria-hidden="true">E</span>
 
-      <a
-        routerLink="/ai"
-        routerLinkActive="navigation__link--active"
-        ariaCurrentWhenActive="page"
-        class="navigation__link navigation__link--ai"
-        aria-label="Asistente IA"
-        [attr.title]="collapsed ? 'Asistente IA' : null"
-        (click)="closeMobileMenu()"
-      >
-
-        <!-- ICONO IA -->
-
-        <svg
-          class="navigation__icon"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-
-          <path
-            d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z"
-          />
-
-        </svg>
-
-
-        <!-- TEXTO -->
-
-        <span class="navigation__ai-copy">
-
-          <span class="navigation__label">
-            Asistente IA
-          </span>
-
-          <span class="navigation__badge">
-            Inteligente
-          </span>
-
-        </span>
-
-      </a>
-
-    </div>
-
-  </nav>
-
-
-  <!-- =====================================================
-       FOOTER
-       ===================================================== -->
-
-  <footer class="sidebar__footer">
-
-    <!-- PERFIL -->
-
-    <div
-      class="profile"
-      aria-label="Perfil de Ezequiel"
-      [attr.title]="collapsed ? 'Ezequiel' : null"
-    >
-
-      <span class="profile__avatar">
-        E
-      </span>
-
-      <span class="profile__copy">
-
-        <span class="profile__name">
-          Ezequiel
-        </span>
-
-        <span class="profile__description">
-          Collectify
-        </span>
-
+      <span class="profile__info">
+        <strong>Ezequiel</strong>
+        <span>Collectify</span>
       </span>
 
     </div>
 
-
-    <!-- BOTÓN COLAPSAR -->
 
     <button
       type="button"
       class="collapse-button"
-      aria-controls="collectify-sidebar"
-      [attr.aria-expanded]="!collapsed"
-      [attr.aria-label]="
-        collapsed
-          ? 'Expandir menú'
-          : 'Contraer menú'
-      "
-      [attr.title]="
-        collapsed
-          ? 'Expandir menú'
-          : 'Contraer menú'
-      "
-      (click)="toggleSidebar()"
+      aria-controls="collectify-navigation"
+      [attr.aria-expanded]="!collapsed()"
+      [attr.aria-label]="collapsed() ? 'Expandir barra lateral' : 'Contraer barra lateral'"
+      [attr.title]="collapsed() ? 'Expandir menú' : 'Contraer menú'"
+      (click)="toggleCollapsed()"
     >
 
       <svg
         viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        [class.collapse-button__icon--reversed]="collapsed()"
         aria-hidden="true"
       >
-
-        <rect
-          x="3"
-          y="4"
-          width="18"
-          height="16"
-          rx="3"
-        />
-
-        <path d="M9 4v16" />
-
-        <path
-          [attr.d]="
-            collapsed
-              ? 'm13 9 3 3-3 3'
-              : 'm16 9-3 3 3 3'
-          "
-        />
-
+        <path d="m14 7-5 5 5 5M20 4v16" />
       </svg>
 
-      <span class="collapse-button__label">
-        Contraer menú
-      </span>
+      <span>Contraer menú</span>
 
     </button>
 
-  </footer>
+  </div>
 
-</header>
+</aside>
