@@ -83,7 +83,7 @@ export class ApiService {
    */
 
   private readonly baseUrl =
-    'https://collectify-7xcu.vercel.app';
+    'https://collectify-api-udxk.onrender.com';
 
 
   /*
